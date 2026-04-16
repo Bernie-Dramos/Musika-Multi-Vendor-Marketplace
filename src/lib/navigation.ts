@@ -56,6 +56,9 @@ const knownPathToPage: Record<string, NavigablePage> = {
 
 export const getPageFromPath = (pathname: string): AppPage => {
   const normalizedPath = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+  if (normalizedPath.startsWith('/international-resources/')) {
+    return 'international-resources';
+  }
   return knownPathToPage[normalizedPath] ?? 'notfound';
 };
 
