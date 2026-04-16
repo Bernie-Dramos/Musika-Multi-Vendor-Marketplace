@@ -12,38 +12,30 @@ import {
 } from '@/components/PageScaffold';
 import { featuredResourceSlugs, type InternationalResource } from '@/lib/internationalResources';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { useInternationalResourcesQuery } from '@/features/resources/hooks/useInternationalResources';
-
-const savedResourcesKey = 'musika.savedResources';
-
-function getSavedResources(): number[] {
-  const stored = localStorage.getItem(savedResourcesKey);
-  if (!stored) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(stored);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((entry): entry is number => typeof entry === 'number');
-    }
-  } catch {
-    return [];
-  }
-  return [];
-}
+import {
+  useInternationalResourcesQuery,
+  useSavedResourceIdsQuery,
+  useSaveResourceMutation,
+  useUnsaveResourceMutation,
+} from '@/features/resources/hooks/useInternationalResources';
 
 export function InternationalResources() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
-  const [savedResourceIds, setSavedResourceIds] = useState<number[]>(() => getSavedResources());
   const [reportedResourceIds, setReportedResourceIds] = useState<number[]>([]);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const resourcesQuery = useInternationalResourcesQuery();
+  const savedResourceIdsQuery = useSavedResourceIdsQuery(user?.id);
+  const saveResourceMutation = useSaveResourceMutation();
+  const unsaveResourceMutation = useUnsaveResourceMutation();
+
+  const savedResourceIds = savedResourceIdsQuery.data ?? [];
   const resources = useMemo(() => resourcesQuery.data ?? [], [resourcesQuery.data]);
 
   const categories = useMemo(
@@ -80,18 +72,24 @@ export function InternationalResources() {
     });
   }, [query, selectedCategory, selectedCountry, selectedCity, showVerifiedOnly, resources]);
 
-  const toggleSave = (resourceId: number) => {
-    if (!isAuthenticated) {
+  const toggleSave = async (resourceId: number) => {
+    setSaveError(null);
+
+    if (!isAuthenticated || !user) {
       navigate('/signin', { state: { from: location.pathname } });
       return;
     }
 
-    const nextSaved = savedResourceIds.includes(resourceId)
-      ? savedResourceIds.filter((id) => id !== resourceId)
-      : [...savedResourceIds, resourceId];
+    try {
+      if (savedResourceIds.includes(resourceId)) {
+        await unsaveResourceMutation.mutateAsync({ userId: user.id, resourceId });
+        return;
+      }
 
-    setSavedResourceIds(nextSaved);
-    localStorage.setItem(savedResourcesKey, JSON.stringify(nextSaved));
+      await saveResourceMutation.mutateAsync({ userId: user.id, resourceId });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to update saved resources.');
+    }
   };
 
   const reportResource = (resourceId: number) => {
@@ -142,7 +140,14 @@ export function InternationalResources() {
               View Details
             </Button>
           </Link>
-          <Button variant="outline" className="border-slate-300 gap-1" onClick={() => toggleSave(resource.id)}>
+          <Button
+            variant="outline"
+            className="border-slate-300 gap-1"
+            onClick={() => {
+              void toggleSave(resource.id);
+            }}
+            disabled={saveResourceMutation.isPending || unsaveResourceMutation.isPending}
+          >
             {isSaved ? <BookmarkCheck className="w-4 h-4 text-emerald-600" /> : <Bookmark className="w-4 h-4" />}
             {isSaved ? 'Saved' : 'Save'}
           </Button>
@@ -191,6 +196,10 @@ export function InternationalResources() {
             title="Find the right resource"
             description="Search by topic, location, and verification status."
           />
+
+          {saveError ? (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{saveError}</div>
+          ) : null}
 
           <PageContentCard className="mb-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">

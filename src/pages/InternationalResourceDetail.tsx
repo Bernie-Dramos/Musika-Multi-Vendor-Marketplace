@@ -14,35 +14,25 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import {
   useInternationalResourceBySlugQuery,
   useInternationalResourcesQuery,
+  useSavedResourceIdsQuery,
+  useSaveResourceMutation,
+  useUnsaveResourceMutation,
 } from '@/features/resources/hooks/useInternationalResources';
-
-const savedResourcesKey = 'musika.savedResources';
-
-function getSavedResources(): number[] {
-  const stored = localStorage.getItem(savedResourcesKey);
-  if (!stored) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(stored);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((entry): entry is number => typeof entry === 'number');
-    }
-  } catch {
-    return [];
-  }
-  return [];
-}
 
 export function InternationalResourceDetail() {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
-  const [savedResourceIds, setSavedResourceIds] = useState<number[]>(() => getSavedResources());
+  const { isAuthenticated, user } = useAuth();
   const [reportedResourceIds, setReportedResourceIds] = useState<number[]>([]);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const resourceQuery = useInternationalResourceBySlugQuery(slug);
   const resourcesQuery = useInternationalResourcesQuery();
+  const savedResourceIdsQuery = useSavedResourceIdsQuery(user?.id);
+  const saveResourceMutation = useSaveResourceMutation();
+  const unsaveResourceMutation = useUnsaveResourceMutation();
+
+  const savedResourceIds = savedResourceIdsQuery.data ?? [];
 
   const resource = resourceQuery.data;
   const allResources = useMemo(() => resourcesQuery.data ?? [], [resourcesQuery.data]);
@@ -98,18 +88,24 @@ export function InternationalResourceDetail() {
   const isSaved = savedResourceIds.includes(resource.id);
   const isReported = reportedResourceIds.includes(resource.id);
 
-  const toggleSave = () => {
-    if (!isAuthenticated) {
+  const toggleSave = async () => {
+    setSaveError(null);
+
+    if (!isAuthenticated || !user) {
       navigate('/signin', { state: { from: location.pathname } });
       return;
     }
 
-    const nextSaved = isSaved
-      ? savedResourceIds.filter((id) => id !== resource.id)
-      : [...savedResourceIds, resource.id];
+    try {
+      if (isSaved) {
+        await unsaveResourceMutation.mutateAsync({ userId: user.id, resourceId: resource.id });
+        return;
+      }
 
-    setSavedResourceIds(nextSaved);
-    localStorage.setItem(savedResourcesKey, JSON.stringify(nextSaved));
+      await saveResourceMutation.mutateAsync({ userId: user.id, resourceId: resource.id });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to update saved resources.');
+    }
   };
 
   const reportResource = () => {
@@ -130,6 +126,10 @@ export function InternationalResourceDetail() {
       </div>
 
       <PageHeroHeader title={resource.title} description={resource.summary} />
+
+      {saveError ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{saveError}</div>
+      ) : null}
 
       <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
         <PageContentCard>
@@ -166,7 +166,14 @@ export function InternationalResourceDetail() {
                 <ExternalLink className="w-4 h-4" />
               </Button>
             </a>
-            <Button variant="outline" className="w-full border-slate-300 gap-2" onClick={toggleSave}>
+            <Button
+              variant="outline"
+              className="w-full border-slate-300 gap-2"
+              onClick={() => {
+                void toggleSave();
+              }}
+              disabled={saveResourceMutation.isPending || unsaveResourceMutation.isPending}
+            >
               {isSaved ? <BookmarkCheck className="w-4 h-4 text-emerald-600" /> : <Bookmark className="w-4 h-4" />}
               {isSaved ? 'Saved' : 'Save Resource'}
             </Button>

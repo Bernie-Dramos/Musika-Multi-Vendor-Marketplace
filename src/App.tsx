@@ -32,6 +32,12 @@ const InternationalResourceDetail = lazy(() =>
 const CommunityForum = lazy(() =>
   import('./pages/CommunityForum').then((module) => ({ default: module.CommunityForum }))
 );
+const CommunityForumNew = lazy(() =>
+  import('./pages/CommunityForumNew').then((module) => ({ default: module.CommunityForumNew }))
+);
+const CommunityForumDetail = lazy(() =>
+  import('./pages/CommunityForumDetail').then((module) => ({ default: module.CommunityForumDetail }))
+);
 const BecomeVendor = lazy(() => import('./pages/BecomeVendor').then((module) => ({ default: module.BecomeVendor })));
 const HelpSupport = lazy(() => import('./pages/HelpSupport').then((module) => ({ default: module.HelpSupport })));
 const Profile = lazy(() => import('./pages/Profile').then((module) => ({ default: module.Profile })));
@@ -43,6 +49,12 @@ const SavedResources = lazy(() =>
   import('./pages/SavedResources').then((module) => ({ default: module.SavedResources }))
 );
 const MyTickets = lazy(() => import('./pages/MyTickets').then((module) => ({ default: module.MyTickets })));
+const ForgotPassword = lazy(() =>
+  import('./pages/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
+);
+const AuthCallback = lazy(() =>
+  import('./pages/AuthCallback').then((module) => ({ default: module.AuthCallback }))
+);
 
 function RouteFallback() {
   return (
@@ -78,6 +90,15 @@ function AppShell() {
             <Route path="/international-resources" element={<InternationalResources />} />
             <Route path="/international-resources/:slug" element={<InternationalResourceDetail />} />
             <Route path="/community-forum" element={<CommunityForum />} />
+            <Route
+              path="/community-forum/new"
+              element={
+                <ProtectedRoute>
+                  <CommunityForumNew />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/community-forum/:slug" element={<CommunityForumDetail />} />
             <Route path="/become-vendor" element={<BecomeVendor />} />
             <Route path="/help-support" element={<HelpSupport />} />
 
@@ -138,6 +159,10 @@ function AppShell() {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            {/* Auth callback: handles email confirmation, password recovery, magic link */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route path="*" element={<NotFound navigateTo={navigateTo} />} />
           </Routes>

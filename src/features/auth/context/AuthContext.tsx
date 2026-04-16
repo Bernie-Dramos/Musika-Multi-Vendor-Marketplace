@@ -18,8 +18,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isSupabaseReady: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { full_name?: string; university?: string; country?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,12 +74,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (
+    email: string,
+    password: string,
+    metadata?: { full_name?: string; university?: string; country?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }
+  ) => {
     if (!supabase) {
       return { error: { message: 'Supabase is not configured.' } as AuthError };
     }
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: metadata ?? {} },
+    });
+    return { error };
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    if (!supabase) {
+      return { error: { message: 'Supabase is not configured.' } as AuthError };
+    }
+
+    const redirectTo = `${window.location.origin}/auth/callback?type=recovery`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return { error };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    if (!supabase) {
+      return { error: { message: 'Supabase is not configured.' } as AuthError };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error };
   }, []);
 
@@ -100,8 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      resetPassword,
+      updatePassword,
     }),
-    [user, session, isLoading, signIn, signUp, signOut]
+    [user, session, isLoading, signIn, signUp, signOut, resetPassword, updatePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

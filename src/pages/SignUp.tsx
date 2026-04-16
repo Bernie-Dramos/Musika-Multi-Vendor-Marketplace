@@ -1,22 +1,27 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Upload, Check, User, Store, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedSection } from '@/components/AnimatedSection';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import type { NavigablePage } from '@/lib/navigation';
 
-type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
 type AccountType = 'student' | 'vendor';
 
 interface SignUpProps {
-  navigateTo: (page: Page) => void;
+  navigateTo?: (page: NavigablePage) => void;
 }
 
 export function SignUp({ navigateTo }: SignUpProps) {
+  const navigate = useNavigate();
+  const { signUp, isSupabaseReady } = useAuth();
+
   const [accountType, setAccountType] = useState<AccountType>('student');
   const [showPassword, setShowPassword] = useState(false);
   const [step] = useState(1);
-  
+
   // Form fields
   const [email, setEmail] = useState('');
   const [university, setUniversity] = useState('');
@@ -26,10 +31,51 @@ export function SignUp({ navigateTo }: SignUpProps) {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign up logic
-    console.log({ accountType, email, university, country, password, agreeTerms });
+    setErrorMessage(null);
+
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+
+    if (!agreeTerms) {
+      setErrorMessage('You must agree to the Terms of Service to create an account.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const { error } = await signUp(email, password, {
+      full_name: undefined,
+      university: university || undefined,
+      country: country || undefined,
+      marketing_consent: marketingConsent,
+      role: accountType,
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setErrorMessage(error.message ?? 'Sign up failed. Please try again.');
+      return;
+    }
+
+    // Supabase sends a confirmation email; show a success screen
+    setEmailSent(true);
+  };
+
+  const handleNavigateToSignIn = () => {
+    if (navigateTo) {
+      navigateTo('signin');
+    } else {
+      navigate('/signin');
+    }
   };
 
   const passwordRequirements = [
@@ -43,6 +89,27 @@ export function SignUp({ navigateTo }: SignUpProps) {
     <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <AnimatedSection className="max-w-lg mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-fade-in-up">
+
+          {/* Email-sent confirmation screen */}
+          {emailSent ? (
+            <div className="text-center py-8 space-y-4">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                <Check className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#0F172A]">Check your email</h2>
+              <p className="text-slate-600 text-sm max-w-sm mx-auto">
+                We've sent a confirmation link to <strong>{email}</strong>. Click the link to verify your account and get started.
+              </p>
+              <Button
+                type="button"
+                onClick={handleNavigateToSignIn}
+                className="bg-[#0F172A] hover:bg-[#1E293B] text-white"
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <>
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#0F172A] mb-2">
@@ -52,6 +119,20 @@ export function SignUp({ navigateTo }: SignUpProps) {
               Create your account to start buying and selling with verified services
             </p>
           </div>
+
+          {/* Supabase not configured banner */}
+          {!isSupabaseReady && (
+            <div className="mb-6 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+              Backend is not connected. Add <code className="font-mono text-xs">VITE_SUPABASE_URL</code> and <code className="font-mono text-xs">VITE_SUPABASE_ANON_KEY</code> to your <code className="font-mono text-xs">.env.local</code> to enable sign up.
+            </div>
+          )}
+
+          {/* Error message */}
+          {errorMessage && (
+            <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              {errorMessage}
+            </div>
+          )}
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-4 mb-8">
@@ -199,11 +280,12 @@ export function SignUp({ navigateTo }: SignUpProps) {
 
               {/* Country */}
               <div>
-                <label className="block text-sm text-slate-600 mb-2">
+                <label htmlFor="signup-country" className="block text-sm text-slate-600 mb-2">
                   Country/Region<span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
+                    id="signup-country"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     className="w-full h-12 border border-slate-300 rounded-lg px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
@@ -341,9 +423,10 @@ export function SignUp({ navigateTo }: SignUpProps) {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-[#0F172A] hover:bg-[#1E293B] text-white font-semibold"
+              disabled={isSubmitting || !isSupabaseReady}
+              className="w-full h-12 bg-[#0F172A] hover:bg-[#1E293B] text-white font-semibold disabled:opacity-60"
             >
-              Create Account
+              {isSubmitting ? 'Creating account…' : 'Create Account'}
             </Button>
           </form>
 
@@ -351,12 +434,15 @@ export function SignUp({ navigateTo }: SignUpProps) {
           <p className="text-center text-sm text-slate-600 mt-6">
             Already have an account?{' '}
             <button
-              onClick={() => navigateTo('signin')}
+              type="button"
+              onClick={handleNavigateToSignIn}
               className="text-emerald-600 hover:text-emerald-700 font-medium"
             >
               Sign In
             </button>
           </p>
+            </>
+          )}
         </div>
       </AnimatedSection>
     </div>

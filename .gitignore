@@ -1,1 +1,10 @@
 node_modules
+dist
+
+# Environment variable files — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Supabase local CLI temp state
+supabase/.temp
