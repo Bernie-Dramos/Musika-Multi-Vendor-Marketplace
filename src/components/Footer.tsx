@@ -2,11 +2,10 @@ import { Shield, Building2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { footerLinks } from '@/lib/data';
-
-type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
+import type { NavigablePage } from '@/lib/navigation';
 
 interface FooterProps {
-  navigateTo: (page: Page) => void;
+  navigateTo: (page: NavigablePage) => void;
 }
 
 export function Footer({ navigateTo }: FooterProps) {
@@ -76,7 +75,7 @@ export function Footer({ navigateTo }: FooterProps) {
               {footerLinks.forStudents.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as Page) : null}
+                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
                     className="text-sm text-slate-400 hover:text-white transition-colors text-left"
                   >
                     {link.label}
@@ -93,7 +92,7 @@ export function Footer({ navigateTo }: FooterProps) {
               {footerLinks.forVendors.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as Page) : null}
+                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
                     className="text-sm text-slate-400 hover:text-white transition-colors text-left"
                   >
                     {link.label}
@@ -110,7 +109,7 @@ export function Footer({ navigateTo }: FooterProps) {
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as Page) : null}
+                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
                     className="text-sm text-slate-400 hover:text-white transition-colors text-left"
                   >
                     {link.label}

@@ -12,20 +12,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/hooks/useCart';
+import type { AppPage, NavigablePage } from '@/lib/navigation';
 
-type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
+type CurrentPage = AppPage;
 
 interface HeaderProps {
-  navigateTo: (page: Page) => void;
-  currentPage: Page;
+  navigateTo: (page: NavigablePage) => void;
+  currentPage: CurrentPage;
 }
 
 const navLinks = [
-  { label: 'Browse Services', page: 'services' as Page },
-  { label: 'International Resources', page: 'home' as Page },
-  { label: 'Community Forum', page: 'home' as Page },
-  { label: 'Become a Vendor', page: 'home' as Page },
-  { label: 'Help & Support', page: 'home' as Page },
+  { label: 'Browse Services', page: 'services' as NavigablePage },
+  { label: 'International Resources', page: 'international-resources' as NavigablePage },
+  { label: 'Community Forum', page: 'community-forum' as NavigablePage },
+  { label: 'Become a Vendor', page: 'become-vendor' as NavigablePage },
+  { label: 'Help & Support', page: 'help-support' as NavigablePage },
 ];
 
 export function Header({ navigateTo, currentPage }: HeaderProps) {
@@ -33,7 +34,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
 
-  const isActive = (page: Page) => currentPage === page;
+  const isActive = (page: NavigablePage) => currentPage === page;
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -110,7 +111,10 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                 )}
               </button>
               
-              <button className="hidden sm:block p-2 text-slate-300 hover:text-white">
+              <button
+                className="hidden sm:block p-2 text-slate-300 hover:text-white"
+                onClick={() => navigateTo('profile')}
+              >
                 <User className="w-5 h-5" />
               </button>
 
