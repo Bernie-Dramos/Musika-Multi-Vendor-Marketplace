@@ -17,14 +17,7 @@ import { AnimatedSection } from '@/components/AnimatedSection';
 import { marketplaceProducts } from '@/lib/data';
 import { useCart } from '@/hooks/useCart';
 
-type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
-
-interface MarketplaceProps {
-  navigateTo: (page: Page) => void;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Marketplace({ navigateTo }: MarketplaceProps) {
+export function Marketplace() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);

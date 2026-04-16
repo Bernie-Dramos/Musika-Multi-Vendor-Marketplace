@@ -21,12 +21,6 @@ import { Badge } from '@/components/ui/badge';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { categories, locations, featuredVendors, popularServices } from '@/lib/data';
 
-type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
-
-interface CategoriesProps {
-  navigateTo: (page: Page) => void;
-}
-
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   Accommodation: Building,
   Transportation: Car,
@@ -35,8 +29,7 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
   Marketplace: ShoppingBag,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Categories({ navigateTo }: CategoriesProps) {
+export function Categories() {
   return (
     <div className="min-h-screen bg-white">
       {/* Page Header */}
