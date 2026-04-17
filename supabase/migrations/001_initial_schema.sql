@@ -5,6 +5,7 @@
 
 -- ─── Extensions ──────────────────────────────────────────────────────────────
 create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 create extension if not exists "pg_trgm"; -- For full-text search on forum/resources
 
 -- ─── Enums ───────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ create trigger profiles_set_updated_at
 
 -- ─── vendor_applications ─────────────────────────────────────────────────────
 create table public.vendor_applications (
-  id                            uuid primary key default uuid_generate_v4(),
+  id                            uuid primary key default gen_random_uuid(),
   vendor_id                     uuid not null references public.profiles(id) on delete cascade,
   business_name                 text not null,
   business_type                 vendor_business_type not null default 'individual',
@@ -146,7 +147,7 @@ create index resources_search_idx   on public.resources using gin (
 
 -- ─── forum_posts ─────────────────────────────────────────────────────────────
 create table public.forum_posts (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   slug          text not null unique,
   title         text not null,
   content       text not null,
@@ -178,7 +179,7 @@ create index forum_posts_tags_idx       on public.forum_posts using gin (tags);
 
 -- ─── forum_comments ──────────────────────────────────────────────────────────
 create table public.forum_comments (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   post_id    uuid not null references public.forum_posts(id) on delete cascade,
   content    text not null,
   author_id  uuid not null references public.profiles(id) on delete cascade,
@@ -213,7 +214,7 @@ create trigger forum_comments_sync_count
 
 -- ─── support_tickets ─────────────────────────────────────────────────────────
 create table public.support_tickets (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.profiles(id) on delete cascade,
   subject     text not null,
   category    text not null,
@@ -234,7 +235,7 @@ create index support_tickets_status_idx on public.support_tickets (status);
 
 -- ─── support_messages ────────────────────────────────────────────────────────
 create table public.support_messages (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   ticket_id       uuid not null references public.support_tickets(id) on delete cascade,
   author_id       uuid references public.profiles(id) on delete set null,
   author_role     text not null check (author_role in ('customer', 'support')),
@@ -247,7 +248,7 @@ create index support_messages_ticket_idx on public.support_messages (ticket_id);
 
 -- ─── saved_resources ─────────────────────────────────────────────────────────
 create table public.saved_resources (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.profiles(id) on delete cascade,
   resource_id integer not null references public.resources(id) on delete cascade,
   created_at  timestamptz not null default now(),
