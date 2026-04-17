@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figure 15 - Security and Performance Logs</title>
+  <style>
+    :root {
+      --bg: #f3f6f9;
+      --ink: #0e2336;
+      --muted: #506274;
+      --card: #ffffff;
+      --line: #d4dde6;
+      --ok: #0f8a45;
+      --warn: #b07400;
+      --bad: #bd1e1e;
+      --blue: #0063b1;
+      --teal: #0d7f7a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 100% 0%, #dce9f7 0%, transparent 35%),
+        radial-gradient(circle at 0% 100%, #dff5ef 0%, transparent 28%),
+        var(--bg);
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 20px;
+    }
+
+    .hero {
+      background: linear-gradient(120deg, var(--blue), var(--teal));
+      color: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 12px 28px rgba(8, 32, 54, 0.2);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      opacity: 0.92;
+      font-size: 15px;
+    }
+
+    .grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 8px 18px rgba(10, 26, 40, 0.06);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .value {
+      margin-top: 4px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+
+    .metrics {
+      margin-top: 12px;
+      border-top: 1px dashed var(--line);
+      padding-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .table-status {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .table-status th,
+    .table-status td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 8px;
+    }
+
+    .table-status th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: #f8fbfe;
+    }
+
+    .check {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .value { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Figure 15: Security and Performance Logs</h1>
+      <p>Musika Multi-Vendor Marketplace | Verification snapshot with Lighthouse metrics and Supabase RLS policy checks.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Performance (Lighthouse)</h2>
+        <div class="scores">
+          <div class="score">
+            <div class="label">Performance</div>
+            <div class="value warn">55</div>
+          </div>
+          <div class="score">
+            <div class="label">Accessibility</div>
+            <div class="value ok">89</div>
+          </div>
+          <div class="score">
+            <div class="label">Best Practices</div>
+            <div class="value ok">96</div>
+          </div>
+          <div class="score">
+            <div class="label">SEO</div>
+            <div class="value warn">83</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><strong>FCP</strong>: 12.5 s</div>
+          <div class="metric"><strong>LCP</strong>: 23.5 s</div>
+          <div class="metric"><strong>TBT</strong>: 100 ms</div>
+          <div class="metric"><strong>CLS</strong>: 0.017</div>
+          <div class="metric"><strong>Speed Index</strong>: 12.5 s</div>
+          <div class="metric"><strong>TTI</strong>: 23.5 s</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Security (Supabase RLS)</h2>
+        <table class="table-status">
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>RLS</th>
+              <th>Policy Model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>profiles</td><td class="check">ENABLED</td><td>Public read + owner/admin update</td></tr>
+            <tr><td>vendor_applications</td><td class="check">ENABLED</td><td>Owner scope + admin review</td></tr>
+            <tr><td>resources</td><td class="check">ENABLED</td><td>Public read + authenticated insert</td></tr>
+            <tr><td>forum_posts</td><td class="check">ENABLED</td><td>Public read + author/admin controls</td></tr>
+            <tr><td>forum_comments</td><td class="check">ENABLED</td><td>Public read + author/admin controls</td></tr>
+            <tr><td>support_tickets</td><td class="check">ENABLED</td><td>Owner read + admin manage</td></tr>
+            <tr><td>support_messages</td><td class="check">ENABLED</td><td>Ticket owner/admin scope</td></tr>
+            <tr><td>saved_resources</td><td class="check">ENABLED</td><td>Owner only read/write/delete</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 10px; font-size: 14px; color: #1b3448;">
+          Smoke test result: anonymous read allowed where intended; anonymous write blocked by RLS.
+        </div>
+      </article>
+    </section>
+
+    <div class="footer">
+      <div><strong>Audit URL:</strong> http://localhost:5174/</div>
+      <div><strong>Timestamp (UTC):</strong> 2026-04-17T09:36:29.892Z</div>
+      <div><strong>Migration Source:</strong> supabase/migrations/002_rls_policies.sql</div>
+    </div>
+  </div>
+</body>
+</html>
