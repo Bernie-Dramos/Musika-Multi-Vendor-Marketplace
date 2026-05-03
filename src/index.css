@@ -25,6 +25,11 @@
     --ring: 0 0% 7%;
     --radius: 0.625rem;
     
+    /* Sidebar dimensions */
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 3rem;
+    --sidebar-width-mobile: 18rem;
+
     /* Custom Musika Colors */
     --musika-navy: 224 39% 10%;
     --musika-navy-light: 223 26% 15%;

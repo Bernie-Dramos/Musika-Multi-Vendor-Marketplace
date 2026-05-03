@@ -1,22 +1,22 @@
 // Mock data for Musika Marketplace
 
 export const categories = [
-  { id: 'accommodation', name: 'Accommodation', count: 1250, icon: 'Building' },
-  { id: 'dining', name: 'Dining', count: 250, icon: 'UtensilsCrossed' },
-  { id: 'transportation', name: 'Transportation', count: 650, icon: 'Car' },
-  { id: 'legal', name: 'Legal & Documentation', count: 50, icon: 'Scale' },
-  { id: 'healthcare', name: 'Healthcare & Wellness', count: 150, icon: 'Heart' },
-  { id: 'beauty', name: 'Beauty', count: 550, icon: 'Sparkles' },
-  { id: 'shopping', name: 'Shopping Mall', count: 400, icon: 'ShoppingBag' },
-  { id: 'electronics', name: 'Electronics & Gadgets', count: 250, icon: 'Smartphone' },
+  { id: 'accommodation', name: 'Accommodation', count: 4, icon: 'Building' },
+  { id: 'dining', name: 'Dining', count: 2, icon: 'UtensilsCrossed' },
+  { id: 'transportation', name: 'Transportation', count: 3, icon: 'Car' },
+  { id: 'legal', name: 'Legal & Documentation', count: 2, icon: 'Scale' },
+  { id: 'healthcare', name: 'Healthcare & Wellness', count: 6, icon: 'Heart' },
+  { id: 'beauty', name: 'Beauty', count: 5, icon: 'Sparkles' },
+  { id: 'shopping', name: 'Shopping Mall', count: 12, icon: 'ShoppingBag' },
+  { id: 'electronics', name: 'Electronics & Gadgets', count: 6, icon: 'Smartphone' },
 ];
 
 export const locations = [
-  { id: 'near-campus', name: 'Near Campus', count: 850 },
-  { id: 'suburb', name: 'Suburb', count: 150 },
-  { id: 'residential', name: 'Residential Areas', count: 50 },
-  { id: 'city-center', name: 'Near City Center', count: 350 },
-  { id: 'online', name: 'Online', count: 650 },
+  { id: 'near-campus', name: 'Near Campus', count: 17 },
+  { id: 'suburb', name: 'Suburb', count: 3 },
+  { id: 'residential', name: 'Residential Areas', count: 1 },
+  { id: 'city-center', name: 'Near City Center', count: 7 },
+  { id: 'online', name: 'Online', count: 12 },
 ];
 
 export const supportedLanguages = [
@@ -37,6 +37,13 @@ function hashSeed(seed: string): number {
   return hash;
 }
 
+const responseTimes = ['5 mins', '10 mins', '15 mins', '20 mins', '30 mins', '1 hr', '2 hrs'];
+
+export function getDeterministicResponseTime(seed: string | number): string {
+  const index = hashSeed(String(seed)) % responseTimes.length;
+  return responseTimes[index];
+}
+
 export function getDeterministicLanguages(seed: string | number, count = 3): string[] {
   const normalizedSeed = String(seed);
   const pool = [...supportedLanguages];
@@ -54,7 +61,7 @@ export function getDeterministicLanguages(seed: string | number, count = 3): str
 
 export function getVendorAvatarUrl(vendorName: string): string {
   const seed = encodeURIComponent(vendorName.trim() || 'vendor');
-  return `https://api.dicebear.com/8.x/initials/svg?seed=${seed}&backgroundType=gradientLinear`;
+  return `https://api.dicebear.com/9.x/lorelei/svg?seed=${seed}`;
 }
 
 // Accommodation Services
@@ -645,29 +652,165 @@ export const marketplaceProducts = [
 ];
 
 // Featured Vendors
-export const featuredVendors = [
-  {
-    id: 1,
-    name: 'Cavendish Shopping Mall',
-    rating: 4.8,
-    reviews: 245,
-    image: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'Legends Wellness Hub',
-    rating: 4.9,
-    reviews: 189,
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Lalita Roongta Apartments',
-    rating: 4.7,
-    reviews: 312,
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop',
-  },
-];
+type VendorService = (typeof services)[number];
+type VendorProduct = (typeof marketplaceProducts)[number];
+
+export interface VendorProfile {
+  id: number;
+  slug: string;
+  name: string;
+  rating: number;
+  reviews: number;
+  image: string;
+  categories: string[];
+  servicesCount: number;
+  productsCount: number;
+  services: VendorService[];
+  products: VendorProduct[];
+}
+
+function toTitleCase(input: string): string {
+  return input
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function categoryLabelFromId(categoryId: string): string {
+  const direct = categories.find((item) => item.id === categoryId)?.name;
+  if (direct) {
+    return direct;
+  }
+
+  const normalized = categoryId.trim().toLowerCase();
+  if (normalized === 'legal') return 'Legal & Documentation';
+  if (normalized === 'healthcare') return 'Healthcare & Wellness';
+  if (normalized === 'transportation') return 'Transportation';
+  if (normalized === 'accommodation') return 'Accommodation';
+  if (normalized === 'beauty') return 'Beauty';
+  if (normalized === 'electronics') return 'Electronics & Gadgets';
+  if (normalized === 'dining') return 'Dining';
+  if (normalized === 'shopping') return 'Shopping Mall';
+
+  return toTitleCase(normalized);
+}
+
+export function getVendorSlug(vendorName: string): string {
+  const base = vendorName.trim().toLowerCase();
+  const sanitized = base
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  return sanitized || 'vendor';
+}
+
+type VendorAccumulator = {
+  name: string;
+  services: VendorService[];
+  products: VendorProduct[];
+  categories: Set<string>;
+  images: string[];
+  ratingSum: number;
+  ratingCount: number;
+  reviewsSum: number;
+};
+
+const vendorAccumulator = new Map<string, VendorAccumulator>();
+
+const ensureVendorBucket = (vendorName: string): VendorAccumulator => {
+  const normalizedName = vendorName.trim() || 'Unknown Vendor';
+  const key = normalizedName.toLowerCase();
+  const existing = vendorAccumulator.get(key);
+
+  if (existing) {
+    return existing;
+  }
+
+  const created: VendorAccumulator = {
+    name: normalizedName,
+    services: [],
+    products: [],
+    categories: new Set<string>(),
+    images: [],
+    ratingSum: 0,
+    ratingCount: 0,
+    reviewsSum: 0,
+  };
+
+  vendorAccumulator.set(key, created);
+  return created;
+};
+
+for (const service of services) {
+  const bucket = ensureVendorBucket(service.vendor);
+  bucket.services.push(service);
+  bucket.categories.add(categoryLabelFromId(service.category));
+  if (service.image) bucket.images.push(service.image);
+  bucket.ratingSum += service.rating;
+  bucket.ratingCount += 1;
+  bucket.reviewsSum += service.reviews;
+}
+
+for (const product of marketplaceProducts) {
+  const bucket = ensureVendorBucket(product.vendor ?? 'Various Vendors');
+  bucket.products.push(product);
+  const categoryLabel = product.subcategory ?? product.category ?? 'Marketplace';
+  bucket.categories.add(categoryLabel);
+  if (product.image) bucket.images.push(product.image);
+
+  if (typeof product.rating === 'number') {
+    bucket.ratingSum += product.rating;
+    bucket.ratingCount += 1;
+  }
+
+  if (typeof product.reviews === 'number') {
+    bucket.reviewsSum += product.reviews;
+  }
+}
+
+export const allVendors: VendorProfile[] = Array.from(vendorAccumulator.values())
+  .map((bucket) => {
+    const deterministicSeed = hashSeed(bucket.name);
+    const rating = bucket.ratingCount > 0
+      ? Number((bucket.ratingSum / bucket.ratingCount).toFixed(1))
+      : Number((4 + (deterministicSeed % 10) / 10).toFixed(1));
+    const reviews = bucket.reviewsSum > 0 ? bucket.reviewsSum : 60 + (deterministicSeed % 340);
+
+    return {
+      id: deterministicSeed,
+      slug: getVendorSlug(bucket.name),
+      name: bucket.name,
+      rating,
+      reviews,
+      image: bucket.images[0] ?? `https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&auto=format&fit=crop&sig=${deterministicSeed}`,
+      categories: Array.from(bucket.categories.values()),
+      servicesCount: bucket.services.length,
+      productsCount: bucket.products.length,
+      services: bucket.services,
+      products: bucket.products,
+    };
+  })
+  .sort((a, b) => {
+    if (b.rating !== a.rating) {
+      return b.rating - a.rating;
+    }
+
+    if (b.reviews !== a.reviews) {
+      return b.reviews - a.reviews;
+    }
+
+    return a.name.localeCompare(b.name);
+  })
+  .map((vendor, index) => ({ ...vendor, id: index + 1 }));
+
+export const featuredVendors: VendorProfile[] = allVendors.slice(0, 3);
+
+export function getVendorBySlug(slug: string): VendorProfile | undefined {
+  return allVendors.find((vendor) => vendor.slug === slug);
+}
 
 // Popular Services
 export const popularServices = [

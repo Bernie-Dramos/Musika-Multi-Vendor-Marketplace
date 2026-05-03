@@ -231,8 +231,9 @@ export function BecomeVendor() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#0F172A] mb-1.5">Business Type *</label>
+                <label htmlFor="business-type" className="block text-sm font-medium text-[#0F172A] mb-1.5">Business Type *</label>
                 <select
+                  id="business-type"
                   value={formData.businessType}
                   onChange={(e) =>
                     setFormData({
@@ -248,8 +249,9 @@ export function BecomeVendor() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#0F172A] mb-1.5">Category *</label>
+                <label htmlFor="vendor-category" className="block text-sm font-medium text-[#0F172A] mb-1.5">Category *</label>
                 <select
+                  id="vendor-category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"

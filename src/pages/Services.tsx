@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building,
   Car,
@@ -17,9 +18,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import {
+  allVendors,
   categories,
   featuredVendors,
   getDeterministicLanguages,
+  getDeterministicResponseTime,
+  getVendorSlug,
   getVendorAvatarUrl,
   locations,
   popularServices,
@@ -58,11 +62,13 @@ const sectionCategoryToDataCategory: Record<string, string> = {
 };
 
 export function Services({ navigateTo }: ServicesProps) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [wishlisted, setWishlisted] = useState<number[]>([]);
   const [showAllVendors, setShowAllVendors] = useState(false);
+  const [vendorPage, setVendorPage] = useState(1);
   const [forceServiceResults, setForceServiceResults] = useState(false);
   const [featuredPage, setFeaturedPage] = useState(1);
   const [resultsPage, setResultsPage] = useState(1);
@@ -302,6 +308,9 @@ export function Services({ navigateTo }: ServicesProps) {
           placeholder="Search for accommodation, transportation..."
           value={searchTerm}
           onChange={handleSearchChange}
+          showSubmitButton={false}
+          enableVoiceSearch
+          enableImageSearch
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -360,24 +369,34 @@ export function Services({ navigateTo }: ServicesProps) {
                 <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-[#111111]">Featured Vendors</h2>
-                    <button
-                      onClick={() => setShowAllVendors((prev) => !prev)}
+                  <button
+                      onClick={() => {
+                        if (showAllVendors) {
+                          setShowAllVendors(false);
+                          setVendorPage(1);
+                        } else {
+                          setShowAllVendors(true);
+                          setVendorPage(1);
+                        }
+                      }}
                       className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white"
                     >
                       {showAllVendors ? 'Show Less' : 'View All'}
                     </button>
                   </div>
                   <div className="grid gap-4 xl:grid-cols-3">
-                    {(showAllVendors ? featuredVendors : featuredVendors.slice(0, 3)).map((vendor) => (
-                      <article key={vendor.id} className="flex items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3">
+                    {(showAllVendors
+                      ? allVendors.slice((vendorPage - 1) * 15, vendorPage * 15)
+                      : featuredVendors
+                    ).map((vendor) => (
+                      <article
+                        key={vendor.id}
+                        onClick={() => navigate(`/vendor/${getVendorSlug(vendor.name)}`)}
+                        className="flex cursor-pointer items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3 transition-colors hover:bg-[#252d3d]"
+                      >
                         <img src={vendor.image} alt={vendor.name} className="h-20 w-24 shrink-0 rounded-xl object-cover" />
                         <div>
                           <div className="flex items-center gap-2">
-                            <img
-                              src={getVendorAvatarUrl(vendor.name)}
-                              alt={vendor.name}
-                              className="h-5 w-5 shrink-0 rounded-full object-cover"
-                            />
                             <p className="text-sm font-bold text-white">{vendor.name}</p>
                           </div>
                           <p className="mt-1 text-xs">
@@ -388,6 +407,7 @@ export function Services({ navigateTo }: ServicesProps) {
                       </article>
                     ))}
                   </div>
+                  {showAllVendors && renderPagination(vendorPage, Math.ceil(allVendors.length / 15), (page) => setVendorPage(page))}
                 </section>
 
                 <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
@@ -470,14 +490,17 @@ export function Services({ navigateTo }: ServicesProps) {
                               className="h-5 w-5 shrink-0 rounded-full bg-[#374151] object-cover"
                             />
                             <span className="text-[11px] font-medium text-white">{service.vendor}</span>
-                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
+                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · {getDeterministicResponseTime(`${service.id}-${service.vendor}`)}</span>
                           </div>
                           <div className="mt-auto flex items-center justify-between pt-1">
                             <p className="text-sm font-bold text-white">
                               {formatINR(service.price)}
                               <span className="text-[10px] font-normal text-[#9ca3af]">/{service.priceUnit}</span>
                             </p>
-                            <button className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white">
+                            <button
+                              onClick={() => navigate(`/service/${service.id}`)}
+                              className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white"
+                            >
                               View Details
                             </button>
                           </div>
@@ -553,14 +576,17 @@ export function Services({ navigateTo }: ServicesProps) {
                               className="h-5 w-5 shrink-0 rounded-full bg-[#374151] object-cover"
                             />
                             <span className="text-[11px] font-medium text-white">{service.vendor}</span>
-                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
+                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · {getDeterministicResponseTime(`${service.id}-${service.vendor}`)}</span>
                           </div>
                           <div className="mt-auto flex items-center justify-between pt-1">
                             <p className="text-sm font-bold text-white">
                               {formatINR(service.price)}
                               <span className="text-[10px] font-normal text-[#9ca3af]">/{service.priceUnit}</span>
                             </p>
-                            <button className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white">
+                            <button
+                              onClick={() => navigate(`/service/${service.id}`)}
+                              className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white"
+                            >
                               View Details
                             </button>
                           </div>

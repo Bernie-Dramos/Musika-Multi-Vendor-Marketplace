@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Heart, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection } from '@/components/AnimatedSection';
@@ -14,6 +15,7 @@ const grocerySubcategories = ['All', 'Fruits', 'Vegetables', 'Juices', 'Drinks',
 const ITEMS_PER_PAGE = 4;
 
 export function Marketplace() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('All');
   const [wishlisted, setWishlisted] = useState<number[]>([]);
@@ -150,7 +152,7 @@ export function Marketplace() {
               const isFavorited = wishlisted.includes(product.id);
               return (
                 <article key={product.id} className="group overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-                  <div className="relative">
+                  <div className="relative cursor-pointer" onClick={() => navigate(`/product/${product.id}`)}>
                     <img src={product.image} alt={product.name} className="h-[210px] w-full object-cover" />
                     <button
                       onClick={() =>
@@ -172,7 +174,12 @@ export function Marketplace() {
                   </div>
 
                   <div className="space-y-2 p-4">
-                    <p className="line-clamp-2 text-sm font-semibold text-[#111111]">{product.name}</p>
+                    <p
+                      className="line-clamp-2 text-sm font-semibold text-[#111111] cursor-pointer hover:text-[#374151]"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      {product.name}
+                    </p>
                     <div className="flex items-center gap-2">
                       <img
                         src={getVendorAvatarUrl(product.vendor ?? 'Various Vendors')}

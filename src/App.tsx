@@ -55,6 +55,15 @@ const MyTickets = lazy(() => import('./pages/MyTickets').then((module) => ({ def
 const ForgotPassword = lazy(() =>
   import('./pages/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
 );
+const ServiceDetail = lazy(() =>
+  import('./pages/ServiceDetail').then((module) => ({ default: module.ServiceDetail }))
+);
+const ProductDetail = lazy(() =>
+  import('./pages/ProductDetail').then((module) => ({ default: module.ProductDetail }))
+);
+const VendorDetail = lazy(() =>
+  import('./pages/VendorDetail').then((module) => ({ default: module.VendorDetail }))
+);
 const AuthCallback = lazy(() =>
   import('./pages/AuthCallback').then((module) => ({ default: module.AuthCallback }))
 );
@@ -90,6 +99,9 @@ function AppShell() {
             <Route path="/services" element={<Services navigateTo={navigateTo} />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/service/:id" element={<ServiceDetail />} />
+            <Route path="/vendor/:name" element={<VendorDetail />} />
             <Route path="/international-resources" element={<InternationalResources />} />
             <Route path="/international-resources/:slug" element={<InternationalResourceDetail />} />
             <Route path="/community-forum" element={<CommunityForum />} />
