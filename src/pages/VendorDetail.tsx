@@ -87,8 +87,9 @@ export function VendorDetail() {
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
-        {/* Top bar */}
-        <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-white px-6 py-4">
+      {/* Top bar */}
+      <div className="border-b border-[#e5e7eb] bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <h1 className="text-lg font-bold text-[#111111]">Vendor Profile</h1>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -104,8 +105,9 @@ export function VendorDetail() {
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="space-y-6 p-6">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
           {/* Vendor hero card */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -172,8 +174,8 @@ export function VendorDetail() {
             )}
           </section>
 
-          {/* Student Reviews */}
-          <section className="rounded-2xl bg-white p-6 shadow-sm">
+        {/* Student Reviews */}
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#111111]">Student Reviews</h3>
               <button className="flex items-center gap-1 text-sm font-medium text-[#111111] hover:underline">
@@ -203,8 +205,8 @@ export function VendorDetail() {
                 </div>
               ))}
             </div>
-          </section>
-        </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -165,7 +165,11 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
               {isAuthenticated ? (
                 <>
-                  <button className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Notifications">
+                  <button
+                    className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    onClick={() => navigateTo('my-tickets')}
+                    aria-label="Notifications"
+                  >
                     <Bell className="h-5 w-5" />
                     <span className="absolute right-1 top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#111111] px-1 text-[10px] text-white">
                       3
