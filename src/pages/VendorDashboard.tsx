@@ -1,39 +1,273 @@
 import { useState } from 'react';
-import { Bell, Camera, ChevronDown, LayoutDashboard, MessageSquare, Settings, ShoppingCart, ArrowRight, Plus, Check } from 'lucide-react';
+import {
+  ArrowRight,
+  Bell,
+  BookMarked,
+  Camera,
+  Check,
+  ChevronDown,
+  ClipboardList,
+  LayoutDashboard,
+  LifeBuoy,
+  MessageSquare,
+  Package,
+  Plus,
+  Settings,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
-const navItems = ['Dashboard', 'My Listings', 'Orders', 'Messages', 'Analytics', 'Earnings', 'Settings'];
+// ── Shared sidebar user card ─────────────────────────────────────────────────
+
+function SidebarUser({
+  displayName,
+  avatarUrl,
+  badge,
+}: {
+  displayName: string;
+  avatarUrl?: string;
+  badge: React.ReactNode;
+}) {
+  return (
+    <div className="mt-auto rounded-xl bg-[#1a1f2e] p-3">
+      <div className="flex items-center gap-3">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#374151] text-sm font-bold text-white">
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-white">{displayName}</p>
+          {badge}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Student Dashboard ────────────────────────────────────────────────────────
+
+const studentNavItems = [
+  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'My Orders', icon: Package },
+  { label: 'Saved Resources', icon: BookMarked },
+  { label: 'Community', icon: Users },
+  { label: 'My Tickets', icon: LifeBuoy },
+  { label: 'Settings', icon: Settings },
+];
+
+const studentStats = [
+  { label: 'Orders', value: '3', icon: Package, color: 'text-[#f5a623]' },
+  { label: 'Saved Items', value: '12', icon: BookMarked, color: 'text-[#22c55e]' },
+  { label: 'Forum Posts', value: '7', icon: MessageSquare, color: 'text-[#60a5fa]' },
+  { label: 'Open Tickets', value: '1', icon: LifeBuoy, color: 'text-[#f87171]' },
+];
+
+const recentActivity = [
+  { label: 'Order #1042 — Airport Pickup', time: '2 hours ago', status: 'Confirmed' },
+  { label: 'Saved "Legal Consultation"', time: 'Yesterday', status: 'Saved' },
+  { label: 'Posted in Community: "Best Areas to Live"', time: '3 days ago', status: 'Post' },
+  { label: 'Ticket #88 — Housing inquiry', time: '5 days ago', status: 'Open' },
+];
+
+function StudentView({ displayName, avatarUrl }: { displayName: string; avatarUrl?: string }) {
+  const [activeNav, setActiveNav] = useState('Dashboard');
+
+  return (
+    <div className="flex min-h-screen">
+      <aside className="hidden min-h-screen w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
+        <h1 className="text-[30px] font-bold">Musika</h1>
+        <p className="mt-1 text-[10px] uppercase tracking-[1px] text-[#6b7280]">International Student Multivendor Marketplace</p>
+
+        <nav className="mt-10 flex-1 space-y-2 text-sm">
+          {studentNavItems.map(({ label, icon: Icon }) => (
+            <button
+              key={label}
+              onClick={() => setActiveNav(label)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-150 ${
+                activeNav === label ? 'bg-[#1a1f2e] text-white' : 'text-[#9ca3af] hover:bg-[#1a1f2e] hover:text-[#e5e7eb]'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <SidebarUser displayName={displayName} avatarUrl={avatarUrl} badge={<p className="text-xs text-[#60a5fa]">Student</p>} />
+      </aside>
+
+      <div className="flex-1 bg-[#f9fafb]">
+        <header className="border-b border-[#e5e7eb] bg-white px-4 py-4 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-6 text-sm">
+              <button className="font-semibold text-[#111111]">Musika</button>
+              <button className="border-b-2 border-[#111111] pb-1 font-semibold text-[#111111]">Dashboard</button>
+              <button className="text-[#6b7280]">Help Center</button>
+            </div>
+            <div className="flex items-center gap-3 text-[#374151]">
+              <Bell className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
+            </div>
+          </div>
+        </header>
+
+        <main className="px-4 py-6 sm:px-8">
+          <div className="mb-6 rounded-2xl bg-gradient-to-r from-[#0f1523] to-[#1a1f2e] p-6 text-white">
+            <p className="text-sm text-[#9ca3af]">Welcome back,</p>
+            <h1 className="mt-1 text-2xl font-bold">{displayName}</h1>
+            <p className="mt-1 text-sm text-[#6b7280]">Your international student hub — explore services, manage orders, and connect.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button className="rounded-full bg-[#f5a623] text-[#111111] hover:bg-[#e09500]">Browse Services</Button>
+              <Button variant="outline" className="rounded-full border-[#374151] text-white hover:bg-[#1a1f2e]">
+                Community Forum
+              </Button>
+            </div>
+          </div>
+
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {studentStats.map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-[#6b7280]">{label}</p>
+                    <p className="mt-1 text-3xl font-bold text-[#111111]">{value}</p>
+                  </div>
+                  <Icon className={`h-5 w-5 ${color}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+            <section className="rounded-2xl border border-[#e5e7eb] bg-white p-6">
+              <h2 className="mb-4 text-lg font-bold text-[#111111]">Recent Activity</h2>
+              <div className="space-y-3">
+                {recentActivity.map(({ label, time, status }) => (
+                  <div key={label} className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[#111111]">{label}</p>
+                      <p className="mt-0.5 text-xs text-[#9ca3af]">{time}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                        status === 'Confirmed'
+                          ? 'bg-[#dcfce7] text-[#15803d]'
+                          : status === 'Open'
+                            ? 'bg-[#fee2e2] text-[#b91c1c]'
+                            : status === 'Saved'
+                              ? 'bg-[#dbeafe] text-[#1d4ed8]'
+                              : 'bg-[#f3f4f6] text-[#374151]'
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-[#e5e7eb] bg-white p-6">
+              <h2 className="mb-4 text-lg font-bold text-[#111111]">Quick Access</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Browse Services', sub: 'Find accommodation, transport and more', icon: Package },
+                  { label: 'Community Forum', sub: 'Ask questions, share experiences', icon: Users },
+                  { label: 'Help & Support', sub: 'Open a ticket or contact support', icon: LifeBuoy },
+                  { label: 'Saved Resources', sub: 'View your bookmarked listings', icon: BookMarked },
+                ].map(({ label, sub, icon: Icon }) => (
+                  <button
+                    key={label}
+                    className="flex w-full items-center gap-3 rounded-xl border border-[#e5e7eb] px-4 py-3 text-left transition-all hover:border-[#111111] hover:bg-[#f9fafb]"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f3f4f6]">
+                      <Icon className="h-4 w-4 text-[#374151]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#111111]">{label}</p>
+                      <p className="truncate text-[11px] text-[#9ca3af]">{sub}</p>
+                    </div>
+                    <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-[#9ca3af]" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[#e5e7eb] bg-white py-2 lg:hidden">
+        <button className="flex flex-col items-center text-xs text-[#111111]">
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </button>
+        <button className="flex flex-col items-center text-xs text-[#6b7280]">
+          <Package className="h-4 w-4" />
+          Orders
+        </button>
+        <button className="flex flex-col items-center text-xs text-[#6b7280]">
+          <BookMarked className="h-4 w-4" />
+          Saved
+        </button>
+        <button className="flex flex-col items-center text-xs text-[#6b7280]">
+          <Users className="h-4 w-4" />
+          Community
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+// ── Vendor Dashboard ─────────────────────────────────────────────────────────
+
+const vendorNavItems = [
+  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'My Listings', icon: ClipboardList },
+  { label: 'Orders', icon: Package },
+  { label: 'Messages', icon: MessageSquare },
+  { label: 'Analytics', icon: TrendingUp },
+  { label: 'Earnings', icon: TrendingUp },
+  { label: 'Settings', icon: Settings },
+];
 
 const initialTags = ['Shona', 'Vegan', 'Cultural'];
 
-export function VendorDashboard() {
+function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl?: string }) {
   const [active, setActive] = useState(true);
   const [tags, setTags] = useState(initialTags);
+  const [activeNav, setActiveNav] = useState('My Listings');
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
       <div className="flex">
-        <aside className="hidden min-h-screen w-[260px] shrink-0 bg-[#0f1523] px-5 py-6 text-white lg:block">
+        <aside className="hidden min-h-screen w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
           <h1 className="text-[30px] font-bold">Musika</h1>
           <p className="mt-1 text-[10px] uppercase tracking-[1px] text-[#6b7280]">International Student Multivendor Marketplace</p>
 
-          <nav className="mt-10 space-y-2 text-sm">
-            {navItems.map((item) => (
+          <nav className="mt-10 flex-1 space-y-2 text-sm">
+            {vendorNavItems.map(({ label, icon: Icon }) => (
               <button
-                key={item}
-                className={`flex w-full items-center rounded-xl px-4 py-3 text-left transition-all duration-150 ${
-                  item === 'Dashboard' ? 'bg-[#1a1f2e] text-white' : 'text-[#9ca3af] hover:bg-[#1a1f2e] hover:text-[#e5e7eb]'
+                key={label}
+                onClick={() => setActiveNav(label)}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-150 ${
+                  activeNav === label ? 'bg-[#1a1f2e] text-white' : 'text-[#9ca3af] hover:bg-[#1a1f2e] hover:text-[#e5e7eb]'
                 }`}
               >
-                {item}
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
               </button>
             ))}
           </nav>
 
-          <div className="mt-auto rounded-xl bg-[#1a1f2e] p-3">
-            <p className="text-sm font-medium text-white">Global Student</p>
-            <p className="text-xs text-[#22c55e]">● Verified</p>
-          </div>
+          <SidebarUser
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            badge={<p className="text-xs text-[#22c55e]">● Verified Vendor</p>}
+          />
         </aside>
 
         <div className="flex-1">
@@ -178,18 +412,33 @@ export function VendorDashboard() {
           Dashboard
         </button>
         <button className="flex flex-col items-center text-xs text-[#6b7280]">
-          <ShoppingCart className="h-4 w-4" />
-          Browse
+          <ClipboardList className="h-4 w-4" />
+          Listings
         </button>
         <button className="flex flex-col items-center text-xs text-[#6b7280]">
-          <ShoppingCart className="h-4 w-4" />
-          Cart
+          <Package className="h-4 w-4" />
+          Orders
         </button>
         <button className="flex flex-col items-center text-xs text-[#6b7280]">
           <MessageSquare className="h-4 w-4" />
-          Profile
+          Messages
         </button>
       </nav>
     </div>
   );
+}
+
+// ── Root export ──────────────────────────────────────────────────────────────
+
+export function VendorDashboard() {
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'User';
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const role = user?.user_metadata?.role as string | undefined;
+
+  if (role === 'vendor') {
+    return <VendorView displayName={displayName} avatarUrl={avatarUrl} />;
+  }
+
+  return <StudentView displayName={displayName} avatarUrl={avatarUrl} />;
 }

@@ -67,8 +67,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const isActive = (page: NavigablePage) => currentPage === page;
 
   return (
-    <header className={`sticky top-0 z-50 w-full bg-white transition-all duration-150 ${isElevated ? 'shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : ''}`}>
-      <div className="border-b border-[#e5e7eb]">
+    <header className={`sticky top-0 z-50 w-full bg-[#0F172A] transition-all duration-150 ${isElevated ? 'shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : ''}`}>
+      <div className="border-b border-slate-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-2 lg:h-16">
             {/* Logo */}
@@ -76,20 +76,20 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
               onClick={() => navigateTo('home')}
               className="flex flex-shrink-0 items-center gap-2"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#111111]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
               <div className="hidden text-left sm:block">
-                <span className="text-lg font-bold text-[#111111]">Musika</span>
-                <span className="-mt-1 block text-xs text-[#6b7280]">International Student</span>
+                <span className="text-lg font-bold text-white">Musika</span>
+                <span className="-mt-1 block text-xs text-slate-400">International Student</span>
               </div>
             </button>
 
             {/* Location Selector - Desktop */}
-            <div className="ml-4 hidden items-center gap-2 text-sm text-[#6b7280] lg:flex">
-              <MapPin className="h-4 w-4 text-[#f5a623]" />
+            <div className="ml-4 hidden items-center gap-2 text-sm text-slate-300 lg:flex">
+              <MapPin className="h-4 w-4 text-emerald-400" />
               <span>Pune, India</span>
-              <button className="text-xs text-[#111111] underline-offset-2 hover:underline">
+              <button className="text-xs text-emerald-400 hover:text-emerald-300">
                 Update Location
               </button>
             </div>
@@ -98,22 +98,22 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
             <div className="mx-3 hidden max-w-xl flex-1 md:flex lg:mx-8">
               <div
                 className={`relative w-full transition-all duration-150 ${
-                  isSearchFocused ? 'rounded-full ring-2 ring-[#111111]' : ''
+                  isSearchFocused ? 'rounded-lg ring-2 ring-emerald-500' : ''
                 }`}
               >
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search for Accommodation, Transportation..."
-                  className="h-10 w-full rounded-full border border-[#e5e7eb] bg-white pl-10 pr-20 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none"
+                  className="h-10 w-full rounded-lg border border-slate-700 bg-slate-800/50 pl-10 pr-20 text-sm text-white placeholder:text-slate-500 focus:outline-none"
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                 />
-                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[#6b7280]">
-                  <button className="rounded-full p-1.5 hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Voice search">
+                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-slate-300">
+                  <button className="rounded-full p-1.5 hover:bg-slate-700 hover:text-white" aria-label="Voice search">
                     <Mic className="h-4 w-4" />
                   </button>
-                  <button className="rounded-full p-1.5 hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Image search">
+                  <button className="rounded-full p-1.5 hover:bg-slate-700 hover:text-white" aria-label="Image search">
                     <Camera className="h-4 w-4" />
                   </button>
                 </div>
@@ -123,7 +123,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
             {/* Right Actions */}
             <div className="flex items-center gap-2 lg:gap-3">
               {/* Language Selector */}
-              <button className="hidden items-center gap-1 text-sm text-[#374151] hover:text-[#111111] sm:flex">
+              <button className="hidden items-center gap-1 text-sm text-slate-300 hover:text-white sm:flex">
                 <Globe className="h-4 w-4" />
                 <span>EN</span>
                 <ChevronDown className="h-3 w-3" />
@@ -131,7 +131,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
               {isAuthenticated ? (
                 <>
-                  <button className="relative rounded-full p-2 text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Notifications">
+                  <button className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Notifications">
                     <Bell className="h-5 w-5" />
                     <span className="absolute right-1 top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#111111] px-1 text-[10px] text-white">
                       3
@@ -139,7 +139,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   </button>
 
                   <button
-                    className="relative rounded-full p-2 text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111111]"
+                    className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white"
                     onClick={() => setIsCartOpen(true)}
                     aria-label="Shopping cart"
                   >
@@ -158,20 +158,20 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                       {avatarLabel}
                     </button>
                     {profileMenuOpen ? (
-                      <div className="absolute right-0 top-11 w-52 rounded-xl border border-[#e5e7eb] bg-white p-1 shadow-lg">
-                        <button onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                      <div className="absolute right-0 top-11 w-52 rounded-xl border border-slate-700 bg-[#0F172A] p-1 shadow-lg">
+                        <button onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
                           <LayoutDashboard className="h-4 w-4" />
                           My Dashboard
                         </button>
-                        <button onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                        <button onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
                           <Package className="h-4 w-4" />
                           My Orders
                         </button>
-                        <button onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                        <button onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
                           <MessageSquare className="h-4 w-4" />
                           Messages
                         </button>
-                        <button onClick={() => { navigateTo('profile'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                        <button onClick={() => { navigateTo('profile'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
                           <Settings className="h-4 w-4" />
                           Settings
                         </button>
@@ -186,14 +186,15 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
               ) : (
                 <div className="hidden items-center gap-2 lg:flex">
                   <Button
-                    variant="outline"
-                    className="rounded-full border-[#111111] bg-transparent text-[#111111] hover:bg-[#f3f4f6]"
+                    variant="ghost"
+                    className="rounded-full text-white hover:bg-slate-800 hover:text-white"
                     onClick={() => navigateTo('signin')}
                   >
                     Login
                   </Button>
                   <Button
-                    className="rounded-full bg-[#111111] text-white hover:bg-black"
+                    variant="outline"
+                    className="rounded-full border-emerald-500 text-emerald-400 hover:bg-emerald-500/10"
                     onClick={() => navigateTo('signup')}
                   >
                     SignUp
@@ -204,25 +205,25 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
               {/* Mobile Menu Button */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <button className="p-2 text-[#374151] hover:text-[#111111] lg:hidden" aria-label="Open navigation menu">
+                  <button className="p-2 text-slate-300 hover:text-white lg:hidden" aria-label="Open navigation menu">
                     <Menu className="h-6 w-6" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] border-[#e5e7eb] bg-white p-0">
+                <SheetContent side="right" className="w-[300px] border-slate-800 bg-[#0F172A] p-0">
                   <div className="flex flex-col h-full">
                     {/* Mobile Header */}
-                    <div className="flex items-center justify-between border-b border-[#e5e7eb] p-4">
-                      <span className="font-bold text-[#111111]">Menu</span>
+                    <div className="flex items-center justify-between border-b border-slate-800 p-4">
+                      <span className="font-bold text-white">Menu</span>
                     </div>
 
                     {/* Mobile Search */}
                     <div className="p-4">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="h-10 w-full rounded-full border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#111111]"
+                          className="h-10 w-full rounded-lg border border-slate-700 bg-slate-800 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                     </div>
@@ -233,7 +234,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                         {navLinks.map((link) => (
                           <li key={link.label}>
                             <button
-                              className="block w-full rounded-lg px-4 py-3 text-left text-[#374151] transition-all duration-150 hover:bg-[#f9fafb] hover:text-[#111111]"
+                              className="block w-full rounded-lg px-4 py-3 text-left text-slate-300 transition-all duration-150 hover:bg-slate-800 hover:text-white"
                               onClick={() => {
                                 navigateTo(link.page);
                                 setMobileMenuOpen(false);
@@ -247,13 +248,13 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     </nav>
 
                     {/* Mobile Auth */}
-                    <div className="space-y-2 border-t border-[#e5e7eb] p-4">
+                    <div className="space-y-2 border-t border-slate-800 p-4">
                       {isAuthenticated ? (
                         <>
                           <Button className="w-full bg-[#111111] text-white hover:bg-black" onClick={() => { navigateTo('vendor-dashboard'); setMobileMenuOpen(false); }}>
                             My Dashboard
                           </Button>
-                          <Button variant="outline" className="w-full border-[#111111]" onClick={handleLogout}>
+                          <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-800" onClick={handleLogout}>
                             Logout
                           </Button>
                         </>
@@ -261,7 +262,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                         <>
                           <Button
                             variant="outline"
-                            className="w-full border-[#111111] text-[#111111]"
+                            className="w-full border-slate-600 text-white hover:bg-slate-800"
                             onClick={() => {
                               navigateTo('signin');
                               setMobileMenuOpen(false);
@@ -290,7 +291,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
       </div>
 
       {/* Navigation Bar - Desktop */}
-      <nav className="hidden border-b border-[#e5e7eb] bg-white lg:block">
+      <nav className="hidden border-t border-slate-800 bg-[#0F172A] lg:block">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-12 items-center justify-between">
             <ul className="flex items-center gap-8">
@@ -300,8 +301,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     onClick={() => navigateTo(link.page)}
                     className={`border-b-2 pb-[13px] text-sm transition-all duration-150 ${
                       isActive(link.page)
-                        ? 'border-[#111111] font-medium text-[#111111]'
-                        : 'border-transparent text-[#6b7280] hover:text-[#111111]'
+                        ? 'border-white font-medium text-white'
+                        : 'border-transparent text-slate-400 hover:text-white'
                     }`}
                   >
                     {link.label}

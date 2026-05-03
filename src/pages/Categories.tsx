@@ -15,11 +15,9 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { categories, featuredVendors, locations, popularServices } from '@/lib/data';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import {
-  LanguageBadge,
-  RatingStars,
   UnifiedSearchBar,
-  VerifiedBadge,
   formatINR,
 } from '@/components/musika/ui-primitives';
 
@@ -35,6 +33,9 @@ const sectionCategories = ['Accommodation', 'Transportation', 'Legal Offices', '
 
 export function Categories() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Guest';
+  const displayEmail = user?.email ?? '';
 
   const sidebar = (
     <div className="flex h-full flex-col rounded-2xl bg-[#1a1f2e] p-5 text-[#d1d5db]">
@@ -97,8 +98,19 @@ export function Categories() {
           Settings
         </button>
         <div className="rounded-xl bg-[#252d3d] p-3">
-          <p className="text-sm font-medium text-white">Lennox Galanje</p>
-          <p className="text-xs text-[#9ca3af]">lennox@example.com</p>
+          <div className="flex items-center gap-3">
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt={displayName} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#374151] text-sm font-bold text-white">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">{displayName}</p>
+              <p className="truncate text-xs text-[#9ca3af]">{displayEmail}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -153,12 +165,13 @@ export function Categories() {
               </div>
               <div className="grid gap-4 xl:grid-cols-3">
                 {featuredVendors.map((vendor) => (
-                  <article key={vendor.id} className="relative h-[100px] overflow-hidden rounded-xl">
-                    <img src={vendor.image} alt={vendor.name} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 text-white">
-                      <p className="mt-6 text-sm font-bold">{vendor.name}</p>
-                      <p className="text-xs text-[#d1d5db]">
-                        {'★★★★☆'} {vendor.rating.toFixed(1)}
+                  <article key={vendor.id} className="flex items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3">
+                    <img src={vendor.image} alt={vendor.name} className="h-20 w-24 shrink-0 rounded-xl object-cover" />
+                    <div>
+                      <p className="text-sm font-bold text-white">{vendor.name}</p>
+                      <p className="mt-1 text-xs">
+                        <span className="text-[#f5a623]">{'★'.repeat(Math.round(vendor.rating))}{'☆'.repeat(5 - Math.round(vendor.rating))}</span>
+                        <span className="text-[#9ca3af]"> ({vendor.rating.toFixed(1)})</span>
                       </p>
                     </div>
                   </article>
@@ -195,57 +208,55 @@ export function Categories() {
 
               <div className="grid gap-5 xl:grid-cols-2">
                 {popularServices.map((service) => (
-                  <article key={service.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-                    <div className="relative">
-                      <img src={service.image} alt={service.title} className="h-[180px] w-full object-cover" />
-                      <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[11px]">{service.category}</span>
-                      <button className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white" aria-label="Save listing">
-                        <Heart className="h-4 w-4 text-[#374151]" />
+                  <article key={service.id} className="flex min-h-[200px] overflow-hidden rounded-2xl bg-[#1a1f2e]">
+                    <div className="relative w-[42%] shrink-0">
+                      <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
+                      <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                        {service.category}
+                      </span>
+                      <button className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm" aria-label="Save listing">
+                        <Heart className="h-3.5 w-3.5 text-white" />
                       </button>
                     </div>
-
-                    <div className="space-y-3 p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {service.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] text-[#374151]">
+                    <div className="flex flex-1 flex-col gap-2 p-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {service.tags.slice(0, 2).map((tag) => (
+                          <span key={tag} className="rounded-full bg-[#374151] px-2.5 py-0.5 text-[10px] text-[#d1d5db]">
                             {tag}
                           </span>
                         ))}
                       </div>
-
-                      <h3 className="text-base font-bold text-[#111111]">{service.title}</h3>
-                      <p className="line-clamp-2 text-[13px] text-[#6b7280]">{service.description}</p>
-
-                      <ul className="space-y-1 text-xs text-[#374151]">
-                        {service.features.slice(0, 3).map((feature) => (
-                          <li key={feature}>• {feature}</li>
-                        ))}
-                      </ul>
-
-                      <div className="flex flex-wrap gap-1.5">
-                        {['English', 'Mandarin', 'Arabic'].map((language) => (
-                          <LanguageBadge key={language} label={language} />
+                      <h3 className="text-sm font-bold leading-snug text-white">{service.title}</h3>
+                      <p className="line-clamp-3 text-[11px] text-[#9ca3af]">{service.description}</p>
+                      <div className="flex items-center gap-1 text-[11px]">
+                        <span className="text-[#f5a623]">★</span>
+                        <span className="font-medium text-white">{service.rating.toFixed(1)}</span>
+                        <span className="text-[#6b7280]">({service.reviews} Reviews)</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-2 text-[10px] text-[#9ca3af]">
+                        {service.features.slice(0, 4).map((feature) => (
+                          <span key={feature}>• {feature}</span>
                         ))}
                       </div>
-
-                      <div className="flex items-center justify-between border-t border-[#f3f4f6] pt-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-[#e5e7eb]" />
-                            <span className="text-sm font-medium text-[#111111]">{service.vendor}</span>
-                            {service.vendorVerified ? <VerifiedBadge /> : null}
-                          </div>
-                          <p className="text-xs text-[#9ca3af]">In business 6 yrs</p>
-                        </div>
-                        <RatingStars rating={service.rating} reviews={service.reviews} />
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
+                        {['English', 'Mandarin', 'Arabic'].map((lang) => (
+                          <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
+                            {lang}
+                          </span>
+                        ))}
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-bold text-[#111111]">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                        <span className="text-[11px] font-medium text-white">{service.vendor}</span>
+                        <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
+                      </div>
+                      <div className="mt-auto flex items-center justify-between pt-1">
+                        <p className="text-sm font-bold text-white">
                           {formatINR(service.price)}
-                          <span className="text-sm font-normal text-[#6b7280]">/{service.priceUnit}</span>
+                          <span className="text-[10px] font-normal text-[#9ca3af]">/{service.priceUnit}</span>
                         </p>
-                        <button className="rounded-full border border-[#111111] px-4 py-2 text-[13px] text-[#111111] transition-all duration-150 hover:bg-[#111111] hover:text-white">
+                        <button className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white">
                           View Details
                         </button>
                       </div>

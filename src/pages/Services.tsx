@@ -1,15 +1,25 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, Heart, Search, Settings, SlidersHorizontal, HelpCircle } from 'lucide-react';
+import {
+  Building,
+  Car,
+  ChevronDown,
+  Heart,
+  HeartPulse,
+  Scale,
+  Search,
+  Settings,
+  ShoppingBag,
+  SlidersHorizontal,
+  HelpCircle,
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection } from '@/components/AnimatedSection';
-import { categories, locations, services } from '@/lib/data';
+import { categories, featuredVendors, locations, popularServices, services } from '@/lib/data';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import {
   EmptyState,
-  LanguageBadge,
-  RatingStars,
   UnifiedSearchBar,
-  VerifiedBadge,
   formatINR,
 } from '@/components/musika/ui-primitives';
 
@@ -26,28 +36,24 @@ const languagePreset: Record<string, string[]> = {
   healthcare: ['English', 'Hindi'],
 };
 
-function TagPill({ label }: { label: string }) {
-  const tones: Record<string, string> = {
-    'High Recommended': 'bg-[#dcfce7] text-[#15803d]',
-    Trusted: 'bg-[#dbeafe] text-[#1d4ed8]',
-    'Popular Choice': 'bg-[#f3e8ff] text-[#7e22ce]',
-    'Budget Friendly': 'bg-[#fef3c7] text-[#b45309]',
-    'Cultural Immersion': 'bg-[#ccfbf1] text-[#0f766e]',
-    Modern: 'bg-[#f3f4f6] text-[#374151]',
-    Professional: 'bg-[#e0e7ff] text-[#3730a3]',
-    Experienced: 'bg-[#f3f4f6] text-[#374151]',
-    Campus: 'bg-[#fef3c7] text-[#b45309]',
-    'On-Campus': 'bg-[#e0f2fe] text-[#0369a1]',
-  };
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Accommodation: Building,
+  Transportation: Car,
+  'Legal Offices': Scale,
+  'Health & Wellness': HeartPulse,
+  Marketplace: ShoppingBag,
+};
 
-  return <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${tones[label] ?? 'bg-[#f3f4f6] text-[#374151]'}`}>{label}</span>;
-}
+const sectionCategories = ['Accommodation', 'Transportation', 'Legal Offices', 'Health & Wellness', 'Marketplace'];
 
 export function Services({ navigateTo }: ServicesProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(['accommodation']);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(['near-campus']);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [wishlisted, setWishlisted] = useState<number[]>([]);
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Guest';
+  const displayEmail = user?.email ?? '';
 
   const selectedChips = useMemo(
     () => [
@@ -78,9 +84,15 @@ export function Services({ navigateTo }: ServicesProps) {
   };
 
   const clearAllFilters = () => {
+    setSearchTerm('');
     setSelectedCategories([]);
     setSelectedLocations([]);
   };
+
+  const hasActiveFilters =
+    searchTerm.trim().length > 0 ||
+    selectedCategories.length > 0 ||
+    selectedLocations.length > 0;
 
   const sidebar = (
     <div className="flex h-full flex-col rounded-2xl bg-[#1a1f2e] p-5 text-[#d1d5db]">
@@ -147,8 +159,19 @@ export function Services({ navigateTo }: ServicesProps) {
           Settings
         </button>
         <div className="rounded-xl bg-[#252d3d] p-3">
-          <p className="text-sm font-medium text-white">Lennox Galanje</p>
-          <p className="text-xs text-[#9ca3af]">lennox@example.com</p>
+          <div className="flex items-center gap-3">
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt={displayName} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#374151] text-sm font-bold text-white">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">{displayName}</p>
+              <p className="truncate text-xs text-[#9ca3af]">{displayEmail}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -212,125 +235,237 @@ export function Services({ navigateTo }: ServicesProps) {
             </Sheet>
           </div>
 
-          <div className="ml-auto flex items-center gap-3 text-sm text-[#6b7280]">
-            <span>{new Intl.NumberFormat('en-IN').format(filtered.length)} Results</span>
-            <button className="flex items-center gap-2 rounded-full border border-[#e5e7eb] px-3 py-2 text-[#374151]">
-              Most Relevant
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </div>
+          {hasActiveFilters ? (
+            <div className="ml-auto flex items-center gap-3 text-sm text-[#6b7280]">
+              <span>{new Intl.NumberFormat('en-IN').format(filtered.length)} Results</span>
+              <button className="flex items-center gap-2 rounded-full border border-[#e5e7eb] px-3 py-2 text-[#374151]">
+                Most Relevant
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
           <aside className="hidden lg:block">{sidebar}</aside>
 
           <div>
-            {filtered.length === 0 ? (
-              <EmptyState onClear={clearAllFilters} />
-            ) : (
-              <div className="grid gap-6 xl:grid-cols-2">
-                {filtered.map((service) => {
-                  const favorite = wishlisted.includes(service.id);
-                  return (
-                    <article
-                      key={service.id}
-                      className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
-                    >
-                      <div className="relative">
-                        <img src={service.image} alt={service.title} className="h-[180px] w-full object-cover" />
-                        <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[11px] text-[#111111]">
-                          {categories.find((item) => item.id === service.category)?.name ?? service.category}
-                        </span>
-                        <button
-                          onClick={() =>
-                            setWishlisted((prev) =>
-                              prev.includes(service.id) ? prev.filter((id) => id !== service.id) : [...prev, service.id]
-                            )
-                          }
-                          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white"
-                          aria-label="Toggle wishlist"
-                        >
-                          <Heart className={`h-4 w-4 ${favorite ? 'fill-[#f5a623] text-[#f5a623]' : 'text-[#374151]'}`} />
-                        </button>
-                      </div>
-
-                      <div className="space-y-3 p-4">
-                        <div className="flex flex-wrap gap-2">
-                          {service.tags.slice(0, 3).map((tag) => (
-                            <TagPill key={tag} label={tag} />
-                          ))}
-                        </div>
-
-                        <h3 className="text-base font-bold text-[#111111]">{service.title}</h3>
-                        <p className="line-clamp-2 text-[13px] text-[#6b7280]">{service.description}</p>
-
-                        <ul className="space-y-1 text-xs text-[#374151]">
-                          {service.features.slice(0, 3).map((feature) => (
-                            <li key={feature}>• {feature}</li>
-                          ))}
-                        </ul>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {(languagePreset[service.category] ?? ['English', 'Hindi']).map((language) => (
-                            <LanguageBadge key={language} label={language} />
-                          ))}
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-[#f3f4f6] pt-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-[#e5e7eb]" />
-                              <span className="text-sm font-medium text-[#111111]">{service.vendor}</span>
-                              {service.vendorVerified ? <VerifiedBadge /> : null}
-                            </div>
-                            <p className="text-xs text-[#9ca3af]">In business 5 yrs</p>
-                          </div>
-                          <RatingStars rating={service.rating} reviews={service.reviews} />
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <p className="text-lg font-bold text-[#111111]">
-                            {formatINR(service.price)}
-                            <span className="text-sm font-normal text-[#6b7280]">/{service.priceUnit}</span>
+            {!hasActiveFilters ? (
+              <main className="space-y-8">
+                <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-[#111111]">Featured Vendors</h2>
+                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                  </div>
+                  <div className="grid gap-4 xl:grid-cols-3">
+                    {featuredVendors.map((vendor) => (
+                      <article key={vendor.id} className="flex items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3">
+                        <img src={vendor.image} alt={vendor.name} className="h-20 w-24 shrink-0 rounded-xl object-cover" />
+                        <div>
+                          <p className="text-sm font-bold text-white">{vendor.name}</p>
+                          <p className="mt-1 text-xs">
+                            <span className="text-[#f5a623]">{'★'.repeat(Math.round(vendor.rating))}{'☆'.repeat(5 - Math.round(vendor.rating))}</span>
+                            <span className="text-[#9ca3af]"> ({vendor.rating.toFixed(1)})</span>
                           </p>
-                          <button className="rounded-full border border-[#111111] px-4 py-2 text-[13px] text-[#111111] transition-all duration-150 hover:bg-[#111111] hover:text-white">
-                            View Details
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-[#111111]">Browse Categories</h2>
+                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    {sectionCategories.map((category) => {
+                      const Icon = iconMap[category] ?? Building;
+                      return (
+                        <button
+                          key={category}
+                          className="rounded-xl border border-transparent bg-[#111827] p-4 text-center text-white transition-all duration-150 hover:scale-[1.01] hover:border-[#f5a623]"
+                        >
+                          <Icon className="mx-auto mb-2 h-6 w-6" />
+                          <p className="text-sm">{category}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-[#111111]">Most Popular Services</h2>
+                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                  </div>
+
+                  <div className="grid gap-5 xl:grid-cols-2">
+                    {popularServices.map((service) => (
+                      <article key={service.id} className="flex min-h-[200px] overflow-hidden rounded-2xl bg-[#1a1f2e]">
+                        <div className="relative w-[42%] shrink-0">
+                          <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
+                          <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                            {service.category}
+                          </span>
+                          <button className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm" aria-label="Save listing">
+                            <Heart className="h-3.5 w-3.5 text-white" />
                           </button>
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
+                        <div className="flex flex-1 flex-col gap-2 p-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {service.tags.slice(0, 2).map((tag) => (
+                              <span key={tag} className="rounded-full bg-[#374151] px-2.5 py-0.5 text-[10px] text-[#d1d5db]">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          <h3 className="text-sm font-bold leading-snug text-white">{service.title}</h3>
+                          <p className="line-clamp-3 text-[11px] text-[#9ca3af]">{service.description}</p>
+                          <div className="flex items-center gap-1 text-[11px]">
+                            <span className="text-[#f5a623]">★</span>
+                            <span className="font-medium text-white">{service.rating.toFixed(1)}</span>
+                            <span className="text-[#6b7280]">({service.reviews} Reviews)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-2 text-[10px] text-[#9ca3af]">
+                            {service.features.slice(0, 4).map((feature) => (
+                              <span key={feature}>• {feature}</span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
+                            {['English', 'Mandarin', 'Arabic'].map((lang) => (
+                              <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
+                                {lang}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                            <span className="text-[11px] font-medium text-white">{service.vendor}</span>
+                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
+                          </div>
+                          <div className="mt-auto flex items-center justify-between pt-1">
+                            <p className="text-sm font-bold text-white">
+                              {formatINR(service.price)}
+                              <span className="text-[10px] font-normal text-[#9ca3af]">/{service.priceUnit}</span>
+                            </p>
+                            <button className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white">
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              </main>
+            ) : filtered.length === 0 ? (
+              <EmptyState onClear={clearAllFilters} />
+            ) : (
+              <>
+                <div className="grid gap-6 xl:grid-cols-2">
+                  {filtered.map((service) => {
+                    const favorite = wishlisted.includes(service.id);
+                    return (
+                      <article
+                        key={service.id}
+                        className="flex min-h-[200px] overflow-hidden rounded-2xl bg-[#1a1f2e] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                      >
+                        <div className="relative w-[42%] shrink-0">
+                          <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
+                          <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                            {categories.find((item) => item.id === service.category)?.name ?? service.category}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setWishlisted((prev) =>
+                                prev.includes(service.id) ? prev.filter((id) => id !== service.id) : [...prev, service.id]
+                              )
+                            }
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
+                            aria-label="Toggle wishlist"
+                          >
+                            <Heart className={`h-3.5 w-3.5 ${favorite ? 'fill-[#f5a623] text-[#f5a623]' : 'text-white'}`} />
+                          </button>
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2 p-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {service.tags.slice(0, 2).map((tag) => (
+                              <span key={tag} className="rounded-full bg-[#374151] px-2.5 py-0.5 text-[10px] text-[#d1d5db]">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          <h3 className="text-sm font-bold leading-snug text-white">{service.title}</h3>
+                          <p className="line-clamp-3 text-[11px] text-[#9ca3af]">{service.description}</p>
+                          <div className="flex items-center gap-1 text-[11px]">
+                            <span className="text-[#f5a623]">★</span>
+                            <span className="font-medium text-white">{service.rating.toFixed(1)}</span>
+                            <span className="text-[#6b7280]">({service.reviews} Reviews)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-2 text-[10px] text-[#9ca3af]">
+                            {service.features.slice(0, 4).map((feature) => (
+                              <span key={feature}>• {feature}</span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
+                            {(languagePreset[service.category] ?? ['English', 'Hindi']).map((lang) => (
+                              <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
+                                {lang}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                            <span className="text-[11px] font-medium text-white">{service.vendor}</span>
+                            <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
+                          </div>
+                          <div className="mt-auto flex items-center justify-between pt-1">
+                            <p className="text-sm font-bold text-white">
+                              {formatINR(service.price)}
+                              <span className="text-[10px] font-normal text-[#9ca3af]">/{service.priceUnit}</span>
+                            </p>
+                            <button className="rounded-full border border-[#4b5563] px-3 py-1.5 text-[11px] text-[#d1d5db] transition-colors hover:border-white hover:text-white">
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <section className="mt-10">
+                  <h2 className="text-lg font-bold text-[#111111]">Recommended For You</h2>
+                  <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                    {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map((item) => (
+                      <button
+                        key={item}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111111] px-5 py-2.5 text-sm text-white"
+                      >
+                        {item}
+                        <Search className="h-3 w-3" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
+                  <button className="font-medium text-[#111111]">Musika &gt;</button>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
+                    <button
+                      key={page}
+                      className={`h-8 min-w-8 rounded-full px-2 ${page === 1 ? 'bg-[#111111] text-white' : 'border border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button className="text-[#374151]">Next</button>
+                </div>
+              </>
             )}
-
-            <section className="mt-10">
-              <h2 className="text-lg font-bold text-[#111111]">Recommended For You</h2>
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-                {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map((item) => (
-                  <button
-                    key={item}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111111] px-5 py-2.5 text-sm text-white"
-                  >
-                    {item}
-                    <Search className="h-3 w-3" />
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
-              <button className="font-medium text-[#111111]">Musika &gt;</button>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
-                <button
-                  key={page}
-                  className={`h-8 min-w-8 rounded-full px-2 ${page === 1 ? 'bg-[#111111] text-white' : 'border border-[#e5e7eb] text-[#374151]'}`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button className="text-[#374151]">Next</button>
-            </div>
           </div>
         </div>
       </div>
