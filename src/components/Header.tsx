@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search,
   MapPin,
@@ -35,7 +35,7 @@ const navLinks = [
   { label: 'Help & Support', page: 'help-support' as NavigablePage },
 ];
 
-const languageOptions = ['English', 'Portuguese', 'Shona', 'Arabic', 'Hindi', 'Zulu', 'Xhosa'];
+const languageOptions = ['Arabic', 'English', 'Hindi', 'Portuguese', 'Shona', 'Xhosa', 'Zulu'];
 
 export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -44,6 +44,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isElevated, setIsElevated] = useState(false);
+  const langCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const profileCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { totalItems, setIsCartOpen } = useCart();
   const { user, isAuthenticated, signOut } = useAuth();
 
@@ -126,7 +128,11 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
             {/* Right Actions */}
             <div className="flex items-center gap-2 lg:gap-3">
               {/* Language Selector */}
-              <div className="relative hidden sm:block">
+              <div
+                className="relative hidden sm:block"
+                onMouseEnter={() => { if (langCloseTimer.current) clearTimeout(langCloseTimer.current); }}
+                onMouseLeave={() => { langCloseTimer.current = setTimeout(() => setLanguageMenuOpen(false), 80); }}
+              >
                 <button
                   onClick={() => setLanguageMenuOpen((prev) => !prev)}
                   className="flex items-center gap-1 text-sm text-slate-300 hover:text-white"
@@ -177,7 +183,11 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     </span>
                   </button>
 
-                  <div className="relative hidden sm:block">
+                  <div
+                    className="relative hidden sm:block"
+                    onMouseEnter={() => { if (profileCloseTimer.current) clearTimeout(profileCloseTimer.current); }}
+                    onMouseLeave={() => { profileCloseTimer.current = setTimeout(() => setProfileMenuOpen(false), 80); }}
+                  >
                     <button
                       className="flex h-9 w-9 items-center justify-center rounded-full bg-[#111111] text-sm font-semibold text-white"
                       onClick={() => setProfileMenuOpen((prev) => !prev)}

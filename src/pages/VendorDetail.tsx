@@ -1,15 +1,77 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, BriefcaseBusiness, Package, Star, Tag } from 'lucide-react';
+import {
+  Bell,
+  CheckCircle2,
+  ChevronRight,
+  Search,
+  ShoppingCart,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatINR } from '@/components/musika/ui-primitives';
 import { getVendorAvatarUrl, getVendorBySlug } from '@/lib/data';
+
+const mockReviews = [
+  {
+    id: 1,
+    name: 'Mei Ling',
+    university: 'University of London',
+    seed: 'MeiLing',
+    stars: 4,
+    text: '"Great service, helped me set up my room! The laptop stand is high quality and the vendor gave some tips on the best local tech shops. Highly recommend for any new international student."',
+  },
+  {
+    id: 2,
+    name: 'David Okoro',
+    university: 'Manchester Metropolitan',
+    seed: 'DavidOkoro',
+    stars: 4,
+    text: '"The noise cancelling headphones were a lifesaver for studying in the busy library. Delivery was super fast and very helpful with my questions about warranty. Solid 4.5/5!"',
+  },
+  {
+    id: 3,
+    name: 'Priya Sharma',
+    university: 'Delhi University',
+    seed: 'PriyaSharma',
+    stars: 5,
+    text: '"Excellent vendor! Product arrived well-packaged and exactly as described. Will definitely order again."',
+  },
+  {
+    id: 4,
+    name: 'Carlos Mendes',
+    university: 'Pune University',
+    seed: 'CarlosMendes',
+    stars: 4,
+    text: '"Very responsive, answered all my questions promptly. Quality is great and price is fair compared to other vendors on the platform."',
+  },
+];
 
 export function VendorDetail() {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
 
   const vendor = useMemo(() => getVendorBySlug(name ?? ''), [name]);
+
+  const allItems = useMemo(() => {
+    if (!vendor) return [];
+    const svcItems = vendor.services.map((s) => ({
+      id: `svc-${s.id}`,
+      title: s.title,
+      description: s.description,
+      price: s.price,
+      image: (s as { image?: string }).image ?? 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&q=80',
+      path: `/service/${s.id}`,
+    }));
+    const prodItems = vendor.products.map((p) => ({
+      id: `prd-${p.id}`,
+      title: (p as { name?: string }).name ?? (p as { title?: string }).title ?? '',
+      description: p.description,
+      price: p.price,
+      image: (p as { image?: string }).image ?? 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&q=80',
+      path: `/product/${p.id}`,
+    }));
+    return [...svcItems, ...prodItems];
+  }, [vendor]);
 
   if (!vendor) {
     return (
@@ -23,154 +85,126 @@ export function VendorDetail() {
     );
   }
 
-  const avgServicePrice = vendor.services.length > 0
-    ? vendor.services.reduce((sum, item) => sum + item.price, 0) / vendor.services.length
-    : null;
-
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#111111]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
-        <nav className="mt-1 text-xs text-[#9ca3af]">
-          <span className="cursor-pointer hover:text-[#111111]" onClick={() => navigate('/services')}>
-            Services
-          </span>
-          {' › '}
-          <span className="text-[#374151]">{vendor.name}</span>
-        </nav>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-2xl bg-[#f3f4f6]">
-              <img
-                src={vendor.image}
-                alt={vendor.name}
-                className="h-[300px] w-full object-cover sm:h-[420px]"
+    <div className="min-h-screen bg-[#f9fafb]">
+        {/* Top bar */}
+        <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-white px-6 py-4">
+          <h1 className="text-lg font-bold text-[#111111]">Vendor Profile</h1>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+              <input
+                placeholder="Search services..."
+                className="h-9 w-52 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-4 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#111111]"
+                readOnly
               />
             </div>
-
-            <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
-              <h2 className="text-lg font-bold text-[#111111]">Services by {vendor.name}</h2>
-              {vendor.services.length === 0 ? (
-                <p className="mt-3 text-sm text-[#6b7280]">No services listed yet.</p>
-              ) : (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {vendor.services.map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => navigate(`/service/${service.id}`)}
-                      className="rounded-xl border border-[#e5e7eb] bg-white p-4 text-left transition-colors hover:border-[#111111]"
-                    >
-                      <p className="text-sm font-semibold text-[#111111]">{service.title}</p>
-                      <p className="mt-1 text-xs text-[#6b7280]">{service.category}</p>
-                      <p className="mt-2 text-sm font-bold text-[#111111]">
-                        {formatINR(service.price)}
-                        <span className="text-xs font-normal text-[#6b7280]">/{service.priceUnit}</span>
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
-              <h2 className="text-lg font-bold text-[#111111]">Products by {vendor.name}</h2>
-              {vendor.products.length === 0 ? (
-                <p className="mt-3 text-sm text-[#6b7280]">No products listed yet.</p>
-              ) : (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {vendor.products.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => navigate(`/product/${product.id}`)}
-                      className="rounded-xl border border-[#e5e7eb] bg-white p-4 text-left transition-colors hover:border-[#111111]"
-                    >
-                      <p className="text-sm font-semibold text-[#111111]">{product.name}</p>
-                      <p className="mt-1 text-xs text-[#6b7280]">{product.subcategory ?? 'Marketplace'}</p>
-                      <p className="mt-2 text-sm font-bold text-[#111111]">{formatINR(product.price)}</p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
+            <button className="rounded-full p-2 text-[#374151] hover:bg-[#f3f4f6]" aria-label="Notifications">
+              <Bell className="h-5 w-5" />
+            </button>
           </div>
+        </div>
 
-          <aside className="rounded-2xl bg-[#111111] p-6 text-white lg:sticky lg:top-6 lg:self-start">
-            <div className="mb-3 flex items-center gap-3">
-              <img
-                src={getVendorAvatarUrl(vendor.name)}
-                alt={vendor.name}
-                className="h-10 w-10 rounded-full bg-[#374151] object-cover"
-              />
-              <div>
-                <div className="flex items-center gap-1">
-                  <p className="text-base font-semibold">{vendor.name}</p>
-                  <BadgeCheck className="h-4 w-4 text-[#60a5fa]" />
+        <div className="space-y-6 p-6">
+          {/* Vendor hero card */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="relative shrink-0">
+                <img
+                  src={getVendorAvatarUrl(vendor.name)}
+                  alt={vendor.name}
+                  className="h-28 w-28 rounded-full border-4 border-white bg-[#f3f4f6] object-cover shadow-md"
+                />
+                <div className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 shadow">
+                  <CheckCircle2 className="h-4 w-4 text-white" />
                 </div>
-                <p className="text-xs text-[#9ca3af]">Verified Marketplace Vendor</p>
+              </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-bold italic text-[#111111]">{vendor.name}</h2>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                    ⭐ {vendor.rating.toFixed(1)}/5 Rating
+                  </span>
+                </div>
+                <p className="mt-2 max-w-prose text-sm text-[#6b7280]">
+                  Specializing in essential {vendor.categories.slice(0, 2).join(' and ').toLowerCase()} services tailored for
+                  international students. Providing student-verified quality with localized support and fast campus-wide delivery.
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="mb-4 flex items-center gap-1.5 text-sm">
-              <Star className="h-4 w-4 fill-[#f5a623] text-[#f5a623]" />
-              <span className="font-semibold">{vendor.rating.toFixed(1)}</span>
-              <span className="text-[#9ca3af]">({vendor.reviews} reviews)</span>
+          {/* Vendor Services */}
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#111111]">Vendor Services</h3>
+              <span className="text-sm text-[#6b7280]">Showing {allItems.length} results</span>
             </div>
+            {allItems.length === 0 ? (
+              <p className="text-sm text-[#6b7280]">No listings yet.</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {allItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => navigate(item.path)}
+                    className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white text-left transition-all hover:border-[#111111] hover:shadow-sm"
+                  >
+                    <img src={item.image} alt={item.title} className="h-40 w-full object-cover" />
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-[#111111]">{item.title}</p>
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                          ACTIVE
+                        </span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-xs text-[#6b7280]">{item.description}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <p className="text-sm font-bold text-[#111111]">{formatINR(item.price)}</p>
+                        <span className="rounded-full p-1.5 text-[#6b7280]">
+                          <ShoppingCart className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
 
-            <div className="grid gap-2 rounded-xl bg-[#1a1f2e] p-3 text-sm">
-              <p className="flex items-center gap-2">
-                <BriefcaseBusiness className="h-4 w-4 text-[#9ca3af]" />
-                Services: {vendor.servicesCount}
-              </p>
-              <p className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-[#9ca3af]" />
-                Products: {vendor.productsCount}
-              </p>
-              {avgServicePrice ? (
-                <p className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-[#9ca3af]" />
-                  Avg service price: {formatINR(Math.round(avgServicePrice))}
-                </p>
-              ) : null}
+          {/* Student Reviews */}
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#111111]">Student Reviews</h3>
+              <button className="flex items-center gap-1 text-sm font-medium text-[#111111] hover:underline">
+                View All <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {vendor.categories.map((category) => (
-                <span
-                  key={category}
-                  className="rounded-full bg-[#252d3d] px-2.5 py-0.5 text-[10px] text-[#d1d5db]"
-                >
-                  {category}
-                </span>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {mockReviews.map((review) => (
+                <div key={review.id} className="rounded-xl border border-[#e5e7eb] p-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={`https://api.dicebear.com/9.x/lorelei/svg?seed=${review.seed}`}
+                      alt={review.name}
+                      className="h-10 w-10 rounded-full bg-[#f3f4f6]"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-[#111111]">{review.name}</p>
+                      <p className="text-xs text-[#9ca3af]">{review.university}</p>
+                    </div>
+                    <div className="ml-auto flex text-sm">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i} className={i < review.stars ? 'text-[#f5a623]' : 'text-[#e5e7eb]'}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-[#6b7280]">{review.text}</p>
+                </div>
               ))}
             </div>
-
-            <div className="mt-5 space-y-2">
-              <Button
-                onClick={() => navigate('/services')}
-                className="h-11 w-full rounded-xl bg-white font-semibold text-[#111111] hover:bg-[#f3f4f6]"
-              >
-                Browse Services
-              </Button>
-              <Button
-                onClick={() => navigate('/marketplace')}
-                variant="outline"
-                className="h-11 w-full rounded-xl border-[#374151] bg-transparent text-white hover:bg-[#1a1f2e]"
-              >
-                Browse Products
-              </Button>
-            </div>
-          </aside>
+          </section>
         </div>
-      </div>
     </div>
   );
 }

@@ -570,16 +570,6 @@ export const marketplaceProducts = [
     subcategory: 'Drinks',
   },
   {
-    id: 1005,
-    name: 'Cerevita 200g',
-    vendor: 'Cerevita',
-    price: 150,
-    originalPrice: 250,
-    currency: '₹',
-    image: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=400&auto=format&fit=crop',
-    subcategory: 'Cereals',
-  },
-  {
     id: 1006,
     name: 'Lager 340ml',
     vendor: 'Lager Co.',
