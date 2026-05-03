@@ -44,6 +44,9 @@ const Profile = lazy(() => import('./pages/Profile').then((module) => ({ default
 const VendorDashboard = lazy(() =>
   import('./pages/VendorDashboard').then((module) => ({ default: module.VendorDashboard }))
 );
+const AdminDashboard = lazy(() =>
+  import('./pages/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
+);
 const MyPosts = lazy(() => import('./pages/MyPosts').then((module) => ({ default: module.MyPosts })));
 const SavedResources = lazy(() =>
   import('./pages/SavedResources').then((module) => ({ default: module.SavedResources }))
@@ -132,6 +135,14 @@ function AppShell() {
               element={
                 <ProtectedRoute>
                   <VendorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />

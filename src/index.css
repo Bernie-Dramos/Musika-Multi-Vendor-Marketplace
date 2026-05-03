@@ -16,20 +16,19 @@
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent: 160 84% 39%;
+    --accent: 38 91% 56%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 160 84% 39%;
+    --ring: 0 0% 7%;
     --radius: 0.625rem;
     
     /* Custom Musika Colors */
-    --musika-navy: 222 47% 11%;
-    --musika-navy-light: 217 33% 17%;
-    --musika-emerald: 160 84% 39%;
-    --musika-emerald-hover: 160 84% 31%;
+    --musika-navy: 224 39% 10%;
+    --musika-navy-light: 223 26% 15%;
+    --musika-amber: 38 91% 56%;
     --musika-slate: 215 16% 47%;
     --musika-slate-light: 215 20% 65%;
   }
@@ -50,7 +49,7 @@
 
 @layer utilities {
   .text-balance {
-    text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -132,8 +131,16 @@
 
 /* Focus visible styles */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid #111111;
   outline-offset: 2px;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition: all 150ms ease;
 }
 
 /* Reduced motion */

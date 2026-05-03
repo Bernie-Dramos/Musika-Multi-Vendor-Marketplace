@@ -1,25 +1,17 @@
-import { useState, useMemo } from 'react';
-import {
-  Search,
-  Mic,
-  Camera,
-  SlidersHorizontal,
-  X,
-  Star,
-  Heart,
-  ChevronDown,
-  Check,
-  Settings,
-  HelpCircle,
-  User,
-  Plus,
-} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ChevronDown, Heart, Search, Settings, SlidersHorizontal, HelpCircle } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { categories, locations, services } from '@/lib/data';
-import { useCart } from '@/hooks/useCart';
+import {
+  EmptyState,
+  LanguageBadge,
+  RatingStars,
+  UnifiedSearchBar,
+  VerifiedBadge,
+  formatINR,
+} from '@/components/musika/ui-primitives';
 
 type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup';
 
@@ -27,22 +19,62 @@ interface ServicesProps {
   navigateTo: (page: Page) => void;
 }
 
+const languagePreset: Record<string, string[]> = {
+  accommodation: ['English', 'Hindi', 'Mandarin'],
+  transportation: ['English', 'Hindi', 'Arabic'],
+  legal: ['English', 'Hindi', 'Arabic'],
+  healthcare: ['English', 'Hindi'],
+};
+
+function TagPill({ label }: { label: string }) {
+  const tones: Record<string, string> = {
+    'High Recommended': 'bg-[#dcfce7] text-[#15803d]',
+    Trusted: 'bg-[#dbeafe] text-[#1d4ed8]',
+    'Popular Choice': 'bg-[#f3e8ff] text-[#7e22ce]',
+    'Budget Friendly': 'bg-[#fef3c7] text-[#b45309]',
+    'Cultural Immersion': 'bg-[#ccfbf1] text-[#0f766e]',
+    Modern: 'bg-[#f3f4f6] text-[#374151]',
+    Professional: 'bg-[#e0e7ff] text-[#3730a3]',
+    Experienced: 'bg-[#f3f4f6] text-[#374151]',
+    Campus: 'bg-[#fef3c7] text-[#b45309]',
+    'On-Campus': 'bg-[#e0f2fe] text-[#0369a1]',
+  };
+
+  return <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${tones[label] ?? 'bg-[#f3f4f6] text-[#374151]'}`}>{label}</span>;
+}
+
 export function Services({ navigateTo }: ServicesProps) {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [addedItems, setAddedItems] = useState<number[]>([]);
-  const { addItem } = useCart();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['accommodation']);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(['near-campus']);
+  const [wishlisted, setWishlisted] = useState<number[]>([]);
+
+  const selectedChips = useMemo(
+    () => [
+      ...selectedCategories.map((id) => ({ id, type: 'category' as const, label: categories.find((item) => item.id === id)?.name ?? id })),
+      ...selectedLocations.map((id) => ({ id, type: 'location' as const, label: locations.find((item) => item.id === id)?.name ?? id })),
+    ],
+    [selectedCategories, selectedLocations]
+  );
+
+  const filtered = useMemo(() => {
+    return services.filter((service) => {
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(service.category);
+      const locationMatch = selectedLocations.length === 0 || true;
+      const textMatch =
+        searchTerm.trim().length === 0 ||
+        service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchTerm.toLowerCase());
+      return categoryMatch && locationMatch && textMatch;
+    });
+  }, [searchTerm, selectedCategories, selectedLocations]);
 
   const toggleCategory = (id: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+    setSelectedCategories((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
   const toggleLocation = (id: string) => {
-    setSelectedLocations((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
-    );
+    setSelectedLocations((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
   const clearAllFilters = () => {
@@ -50,425 +82,258 @@ export function Services({ navigateTo }: ServicesProps) {
     setSelectedLocations([]);
   };
 
-  // Filter services based on selected categories and locations
-  const filteredServices = useMemo(() => {
-    return services.filter((service) => {
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(service.category);
-      // For demo purposes, location filtering is simplified
-      const locationMatch = selectedLocations.length === 0 || true;
-      return categoryMatch && locationMatch;
-    });
-  }, [selectedCategories, selectedLocations]);
+  const sidebar = (
+    <div className="flex h-full flex-col rounded-2xl bg-[#1a1f2e] p-5 text-[#d1d5db]">
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-white">Filter</h3>
+        <button onClick={clearAllFilters} className="text-sm text-[#9ca3af] hover:text-white">
+          Clear All
+        </button>
+      </div>
 
-  const handleAddToCart = (service: typeof services[0]) => {
-    addItem({
-      id: service.id,
-      name: service.title,
-      price: service.price,
-      currency: '$',
-      image: service.image,
-      vendor: service.vendor,
-      category: service.category,
-    });
-    
-    // Show added feedback
-    setAddedItems((prev) => [...prev, service.id]);
-    setTimeout(() => {
-      setAddedItems((prev) => prev.filter((id) => id !== service.id));
-    }, 1500);
-  };
+      <section className="mb-6">
+        <h4 className="mb-3 flex items-center justify-between font-medium text-white">
+          Categories
+          <ChevronDown className="h-4 w-4" />
+        </h4>
+        <div className="space-y-2">
+          {categories.map((category) => (
+            <label key={category.id} className="flex cursor-pointer items-center justify-between text-sm">
+              <span className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category.id)}
+                  onChange={() => toggleCategory(category.id)}
+                  className="h-4 w-4 rounded border border-white bg-transparent accent-[#f5a623]"
+                />
+                <span>{category.name}</span>
+              </span>
+              <span className="text-[#9ca3af]">({category.count})</span>
+            </label>
+          ))}
+        </div>
+      </section>
 
-  const getCategoryDisplayName = (category: string) => {
-    const categoryMap: Record<string, string> = {
-      'accommodation': 'Accommodation',
-      'electronics': 'Electronics & Gadgets',
-      'beauty': 'Beauty',
-      'healthcare': 'Healthcare & Wellness',
-      'dining': 'Dining',
-      'transportation': 'Transportation',
-      'legal': 'Legal & Documentation',
-    };
-    return categoryMap[category] || category;
-  };
+      <section className="mb-6">
+        <h4 className="mb-3 flex items-center justify-between font-medium text-white">
+          Location
+          <ChevronDown className="h-4 w-4" />
+        </h4>
+        <div className="space-y-2">
+          {locations.map((location) => (
+            <label key={location.id} className="flex cursor-pointer items-center justify-between text-sm">
+              <span className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedLocations.includes(location.id)}
+                  onChange={() => toggleLocation(location.id)}
+                  className="h-4 w-4 rounded border border-white bg-transparent accent-[#f5a623]"
+                />
+                <span>{location.name}</span>
+              </span>
+              <span className="text-[#9ca3af]">({location.count})</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <div className="mt-auto border-t border-[#374151] pt-4">
+        <button className="mb-2 flex items-center gap-2 text-sm hover:text-white">
+          <HelpCircle className="h-4 w-4" />
+          Help & Support
+        </button>
+        <button className="mb-3 flex items-center gap-2 text-sm hover:text-white">
+          <Settings className="h-4 w-4" />
+          Settings
+        </button>
+        <div className="rounded-xl bg-[#252d3d] p-3">
+          <p className="text-sm font-medium text-white">Lennox Galanje</p>
+          <p className="text-xs text-[#9ca3af]">lennox@example.com</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Page Header */}
-      <div className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-            <button onClick={() => navigateTo('home')} className="hover:text-[#0F172A]">Home</button>
-            <span>&gt;</span>
-            <span className="text-[#0F172A]">Services</span>
-          </nav>
+      <div className="mx-auto max-w-7xl px-4 pb-2 pt-6 sm:px-6 lg:px-8">
+        <nav className="mb-6 flex items-center gap-2 text-sm text-[#6b7280]">
+          <button onClick={() => navigateTo('home')} className="hover:text-[#111111]">
+            Home
+          </button>
+          <span>&gt;</span>
+          <span className="text-[#111111]">Services</span>
+        </nav>
 
-          <AnimatedSection className="text-center mb-6">
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#0F172A] mb-2">
-              Your Gateway to Reliable Services
-            </h1>
-            <p className="text-slate-600">
-              Discover trusted services from verified providers tailored for International Students
-            </p>
-          </AnimatedSection>
+        <AnimatedSection className="mb-6 text-center">
+          <h1 className="text-3xl font-bold text-[#111111]">Your Gateway to Reliable Services</h1>
+          <p className="mt-2 text-[#6b7280]">Discover trusted services from verified providers tailored for International Students</p>
+        </AnimatedSection>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search for Accommodation, Transportation..."
-                className="w-full h-12 pl-12 pr-24 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <button className="p-2 text-slate-400 hover:text-slate-600">
-                  <Mic className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-slate-600">
-                  <Camera className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-slate-600">
-                  <Search className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+        <UnifiedSearchBar
+          placeholder="Search for accommodation, transportation..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
-          {/* Quick Filters */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-            <span className="text-sm text-slate-500">Quick Filters:</span>
-            <button className="flex items-center gap-1 px-3 py-1.5 bg-[#0F172A] text-white text-sm rounded-full">
-              <SlidersHorizontal className="w-3 h-3" />
-              All Filters
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-sm text-[#6b7280]">Quick Filters</span>
+          <button className="flex items-center gap-1 rounded-full bg-[#111111] px-3 py-1.5 text-sm text-white">
+            <SlidersHorizontal className="h-3 w-3" />
+            All Filters
+          </button>
+          {selectedChips.map((chip) => (
+            <button
+              key={`${chip.type}-${chip.id}`}
+              onClick={() => (chip.type === 'category' ? toggleCategory(chip.id) : toggleLocation(chip.id))}
+              className="rounded-full bg-[#111111] px-3 py-1.5 text-sm text-white"
+            >
+              {chip.label} ×
             </button>
-            {selectedCategories.map((cat) => (
-              <span
-                key={cat}
-                className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm rounded-full"
-              >
-                {categories.find((c) => c.id === cat)?.name}
-                <X className="w-3 h-3 cursor-pointer" onClick={() => toggleCategory(cat)} />
-              </span>
-            ))}
-            {selectedLocations.map((loc) => (
-              <span
-                key={loc}
-                className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-700 text-sm rounded-full"
-              >
-                {locations.find((l) => l.id === loc)?.name}
-                <X className="w-3 h-3 cursor-pointer" onClick={() => toggleLocation(loc)} />
-              </span>
-            ))}
-            {(selectedCategories.length > 0 || selectedLocations.length > 0) && (
-              <button
-                onClick={clearAllFilters}
-                className="text-sm text-emerald-600 hover:text-emerald-700"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
+          ))}
+          {selectedChips.length > 0 ? (
+            <button onClick={clearAllFilters} className="text-sm text-[#6b7280] hover:text-[#111111]">
+              Clear All
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <aside className="w-full lg:w-64 flex-shrink-0">
-            <div className="bg-[#0F172A] rounded-xl p-6 lg:sticky lg:top-24">
-              {/* Filter Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-semibold">Filter</h3>
-                <button
-                  onClick={clearAllFilters}
-                  className="text-sm text-emerald-400 hover:text-emerald-300"
-                >
-                  Clear All
-                </button>
-              </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-5 flex items-center justify-between">
+          <div className="lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="border-[#111111] text-[#111111]">Filters</Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[290px] border-none bg-transparent p-0">
+                {sidebar}
+              </SheetContent>
+            </Sheet>
+          </div>
 
-              {/* Categories */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium mb-4 flex items-center justify-between">
-                  Categories
-                  <ChevronDown className="w-4 h-4" />
-                </h4>
-                <div className="space-y-3">
-                  {categories.map((category) => (
-                    <label
-                      key={category.id}
-                      className="flex items-center justify-between cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedCategories.includes(category.id)}
-                          onCheckedChange={() => toggleCategory(category.id)}
-                          className="border-slate-500 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                        />
-                        <span className="text-slate-300 group-hover:text-white transition-colors text-sm">
-                          {category.name}
-                        </span>
-                      </div>
-                      <span className="text-slate-500 text-sm">({category.count})</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+          <div className="ml-auto flex items-center gap-3 text-sm text-[#6b7280]">
+            <span>{new Intl.NumberFormat('en-IN').format(filtered.length)} Results</span>
+            <button className="flex items-center gap-2 rounded-full border border-[#e5e7eb] px-3 py-2 text-[#374151]">
+              Most Relevant
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
 
-              {/* Location */}
-              <div className="mb-6">
-                <h4 className="text-white font-medium mb-4 flex items-center justify-between">
-                  Location
-                  <ChevronDown className="w-4 h-4" />
-                </h4>
-                <div className="space-y-3">
-                  {locations.map((location) => (
-                    <label
-                      key={location.id}
-                      className="flex items-center justify-between cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedLocations.includes(location.id)}
-                          onCheckedChange={() => toggleLocation(location.id)}
-                          className="border-slate-500 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                        />
-                        <span className="text-slate-300 group-hover:text-white transition-colors text-sm">
-                          {location.name}
-                        </span>
-                      </div>
-                      <span className="text-slate-500 text-sm">({location.count})</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="hidden lg:block">{sidebar}</aside>
 
-              {/* User Actions */}
-              <div className="border-t border-slate-700 pt-4 space-y-3">
-                <button className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors w-full">
-                  <HelpCircle className="w-5 h-5" />
-                  <span className="text-sm">Help & Support</span>
-                </button>
-                <button className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors w-full">
-                  <Settings className="w-5 h-5" />
-                  <span className="text-sm">Settings</span>
-                </button>
-              </div>
-
-              {/* User Profile */}
-              <div className="border-t border-slate-700 pt-4 mt-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-medium">Lennox Galanje</p>
-                    <p className="text-slate-500 text-xs">lennoxgalanje@gmail.com</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* Service Listings */}
-          <div className="flex-1">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-slate-600">
-                <span className="font-semibold text-[#0F172A]">{filteredServices.length}</span> Results
-              </p>
-              <div className="relative">
-                <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50">
-                  Most Relevant
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Service Cards */}
-            {filteredServices.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">No results found</h3>
-                <p className="text-slate-500 mb-4">Try adjusting your filters to see more results</p>
-                <Button onClick={clearAllFilters} variant="outline">
-                  Clear All Filters
-                </Button>
-              </div>
+          <div>
+            {filtered.length === 0 ? (
+              <EmptyState onClear={clearAllFilters} />
             ) : (
-              <div className="space-y-6">
-                {filteredServices.map((service) => (
-                  <div 
-                    key={service.id} 
-                    className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Image */}
-                      <div className="sm:w-48 md:w-64 h-48 sm:h-auto flex-shrink-0 relative">
-                        <img
-                          src={service.image}
-                          alt={service.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                          <Heart className="w-4 h-4 text-slate-600" />
-                        </button>
-                        <Badge className="absolute top-3 left-3 bg-[#0F172A] text-white text-xs">
-                          {getCategoryDisplayName(service.category)}
-                        </Badge>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 p-4 sm:p-6">
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {service.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="bg-emerald-100 text-emerald-700 text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                          {service.title}
-                        </h3>
-
-                        <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                          {service.description}
-                        </p>
-
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {service.features.map((feature) => (
-                            <span
-                              key={feature}
-                              className="flex items-center gap-1 text-xs text-slate-500"
-                            >
-                              <Check className="w-3 h-3 text-emerald-500" />
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                              <span className="text-sm font-medium text-[#0F172A]">
-                                {service.rating}
-                              </span>
-                              <span className="text-sm text-slate-500">
-                                ({service.reviews} Reviews)
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-slate-200 rounded-full" />
-                              <span className="text-sm text-slate-600">{service.vendor}</span>
-                              {service.vendorVerified && (
-                                <span className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                  <Check className="w-2.5 h-2.5 text-white" />
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <span className="text-lg font-bold text-[#0F172A]">
-                              ${service.price}
-                              <span className="text-sm font-normal text-slate-500">/{service.priceUnit}</span>
-                            </span>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                className="border-[#0F172A] text-[#0F172A] hover:bg-[#0F172A] hover:text-white"
-                              >
-                                View Details
-                              </Button>
-                              <Button
-                                onClick={() => handleAddToCart(service)}
-                                className={`transition-all ${
-                                  addedItems.includes(service.id)
-                                    ? 'bg-emerald-500 hover:bg-emerald-600'
-                                    : 'bg-[#0F172A] hover:bg-[#1E293B]'
-                                } text-white`}
-                              >
-                                {addedItems.includes(service.id) ? (
-                                  <span className="flex items-center gap-1">
-                                    <Check className="w-4 h-4" />
-                                    Added
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1">
-                                    <Plus className="w-4 h-4" />
-                                    Add
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {filteredServices.length > 0 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <span className="text-lg font-semibold text-[#0F172A]">Musika</span>
-                <span className="text-slate-400">&gt;</span>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((page) => (
-                    <button
-                      key={page}
-                      className={`w-8 h-8 rounded-lg text-sm ${
-                        page === 1
-                          ? 'bg-[#0F172A] text-white'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
+              <div className="grid gap-6 xl:grid-cols-2">
+                {filtered.map((service) => {
+                  const favorite = wishlisted.includes(service.id);
+                  return (
+                    <article
+                      key={service.id}
+                      className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
                     >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-                <button className="text-sm text-slate-600 hover:text-[#0F172A]">Next</button>
+                      <div className="relative">
+                        <img src={service.image} alt={service.title} className="h-[180px] w-full object-cover" />
+                        <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[11px] text-[#111111]">
+                          {categories.find((item) => item.id === service.category)?.name ?? service.category}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setWishlisted((prev) =>
+                              prev.includes(service.id) ? prev.filter((id) => id !== service.id) : [...prev, service.id]
+                            )
+                          }
+                          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white"
+                          aria-label="Toggle wishlist"
+                        >
+                          <Heart className={`h-4 w-4 ${favorite ? 'fill-[#f5a623] text-[#f5a623]' : 'text-[#374151]'}`} />
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {service.tags.slice(0, 3).map((tag) => (
+                            <TagPill key={tag} label={tag} />
+                          ))}
+                        </div>
+
+                        <h3 className="text-base font-bold text-[#111111]">{service.title}</h3>
+                        <p className="line-clamp-2 text-[13px] text-[#6b7280]">{service.description}</p>
+
+                        <ul className="space-y-1 text-xs text-[#374151]">
+                          {service.features.slice(0, 3).map((feature) => (
+                            <li key={feature}>• {feature}</li>
+                          ))}
+                        </ul>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {(languagePreset[service.category] ?? ['English', 'Hindi']).map((language) => (
+                            <LanguageBadge key={language} label={language} />
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-[#f3f4f6] pt-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-[#e5e7eb]" />
+                              <span className="text-sm font-medium text-[#111111]">{service.vendor}</span>
+                              {service.vendorVerified ? <VerifiedBadge /> : null}
+                            </div>
+                            <p className="text-xs text-[#9ca3af]">In business 5 yrs</p>
+                          </div>
+                          <RatingStars rating={service.rating} reviews={service.reviews} />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-bold text-[#111111]">
+                            {formatINR(service.price)}
+                            <span className="text-sm font-normal text-[#6b7280]">/{service.priceUnit}</span>
+                          </p>
+                          <button className="rounded-full border border-[#111111] px-4 py-2 text-[13px] text-[#111111] transition-all duration-150 hover:bg-[#111111] hover:text-white">
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
-          </div>
-        </div>
-      </div>
 
-      {/* Recommended Section */}
-      <section className="py-12 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection>
-            <h2 className="text-xl font-semibold text-[#0F172A] mb-6">Recommended For You</h2>
-            <div className="flex flex-wrap gap-3">
-              {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map(
-                (item) => (
+            <section className="mt-10">
+              <h2 className="text-lg font-bold text-[#111111]">Recommended For You</h2>
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map((item) => (
                   <button
                     key={item}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-full text-sm hover:bg-[#1E293B] transition-colors"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111111] px-5 py-2.5 text-sm text-white"
                   >
                     {item}
-                    <Search className="w-3 h-3" />
+                    <Search className="h-3 w-3" />
                   </button>
-                )
-              )}
+                ))}
+              </div>
+            </section>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
+              <button className="font-medium text-[#111111]">Musika &gt;</button>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
+                <button
+                  key={page}
+                  className={`h-8 min-w-8 rounded-full px-2 ${page === 1 ? 'bg-[#111111] text-white' : 'border border-[#e5e7eb] text-[#374151]'}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button className="text-[#374151]">Next</button>
             </div>
-          </AnimatedSection>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

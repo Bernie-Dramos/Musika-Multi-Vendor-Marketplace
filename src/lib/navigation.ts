@@ -11,6 +11,7 @@ export type AppPage =
   | 'help-support'
   | 'profile'
   | 'vendor-dashboard'
+  | 'admin-dashboard'
   | 'my-posts'
   | 'saved-resources'
   | 'my-tickets'
@@ -31,6 +32,7 @@ export const pageToPath: Record<NavigablePage, string> = {
   'help-support': '/help-support',
   profile: '/profile',
   'vendor-dashboard': '/vendor-dashboard',
+  'admin-dashboard': '/admin-dashboard',
   'my-posts': '/my-posts',
   'saved-resources': '/saved-resources',
   'my-tickets': '/my-tickets',
@@ -49,6 +51,7 @@ const knownPathToPage: Record<string, NavigablePage> = {
   '/help-support': 'help-support',
   '/profile': 'profile',
   '/vendor-dashboard': 'vendor-dashboard',
+  '/admin-dashboard': 'admin-dashboard',
   '/my-posts': 'my-posts',
   '/saved-resources': 'saved-resources',
   '/my-tickets': 'my-tickets',

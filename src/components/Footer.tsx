@@ -10,14 +10,14 @@ interface FooterProps {
 
 export function Footer({ navigateTo }: FooterProps) {
   return (
-    <footer className="bg-[#0F172A] text-white">
+    <footer className="bg-[#0f1523] text-white">
       {/* Newsletter Section */}
-      <div className="border-b border-slate-800">
+      <div className="border-b border-[#1a1f2e]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold mb-1">Stay Updated</h3>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-[#9ca3af]">
                 Get the latest products, services, tips and resources delivered to your inbox
               </p>
             </div>
@@ -25,9 +25,9 @@ export function Footer({ navigateTo }: FooterProps) {
               <Input
                 type="email"
                 placeholder="Enter your email address"
-                className="w-full md:w-80 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:ring-emerald-500"
+                className="w-full md:w-80 bg-[#1a1f2e] border-[#374151] text-white placeholder:text-[#6b7280] focus:ring-[#111111]"
               />
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-6">
+              <Button className="bg-[#111111] hover:bg-black text-white px-6">
                 Subscribe
               </Button>
             </div>
@@ -49,20 +49,20 @@ export function Footer({ navigateTo }: FooterProps) {
               </div>
               <div className="text-left">
                 <span className="font-bold text-lg">Musika</span>
-                <span className="text-xs text-slate-400 block -mt-1">International Student</span>
+                <span className="text-xs text-[#9ca3af] block -mt-1">International Student</span>
               </div>
             </button>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-slate-400">
-                <Shield className="w-4 h-4 text-emerald-400" />
+              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
+                <Shield className="w-4 h-4 text-[#f5a623]" />
                 <span>100% Verified Services</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-slate-400">
-                <Building2 className="w-4 h-4 text-emerald-400" />
+              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
+                <Building2 className="w-4 h-4 text-[#f5a623]" />
                 <span>25+ University Partnerships</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-slate-400">
-                <Users className="w-4 h-4 text-emerald-400" />
+              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
+                <Users className="w-4 h-4 text-[#f5a623]" />
                 <span>50 000+ Users</span>
               </li>
             </ul>
@@ -76,7 +76,7 @@ export function Footer({ navigateTo }: FooterProps) {
                 <li key={link.label}>
                   <button
                     onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-slate-400 hover:text-white transition-colors text-left"
+                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
                   >
                     {link.label}
                   </button>
@@ -93,7 +93,7 @@ export function Footer({ navigateTo }: FooterProps) {
                 <li key={link.label}>
                   <button
                     onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-slate-400 hover:text-white transition-colors text-left"
+                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
                   >
                     {link.label}
                   </button>
@@ -110,7 +110,7 @@ export function Footer({ navigateTo }: FooterProps) {
                 <li key={link.label}>
                   <button
                     onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-slate-400 hover:text-white transition-colors text-left"
+                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
                   >
                     {link.label}
                   </button>
@@ -122,13 +122,13 @@ export function Footer({ navigateTo }: FooterProps) {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-slate-800">
+      <div className="border-t border-[#1a1f2e]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[#9ca3af]">
               © 2025 Musika. All rights reserved.
             </p>
-            <div className="flex items-center gap-4 text-sm text-slate-400">
+            <div className="flex items-center gap-4 text-sm text-[#9ca3af]">
               <button className="hover:text-white transition-colors">
                 Privacy Policy
               </button>

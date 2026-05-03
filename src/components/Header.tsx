@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   MapPin,
   Globe,
   Bell,
   ShoppingCart,
-  User,
   Menu,
   ChevronDown,
+  Mic,
+  Camera,
+  LogOut,
+  Settings,
+  MessageSquare,
+  Package,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
 
 type CurrentPage = AppPage;
@@ -32,132 +39,190 @@ const navLinks = [
 export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isElevated, setIsElevated] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
+  const { user, isAuthenticated, signOut } = useAuth();
+
+  useEffect(() => {
+    const onScroll = () => setIsElevated(window.scrollY > 4);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const avatarLabel = useMemo(() => {
+    const name =
+      (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()) ||
+      user?.email ||
+      'Student';
+    return name.charAt(0).toUpperCase();
+  }, [user]);
+
+  const handleLogout = async () => {
+    await signOut();
+    setProfileMenuOpen(false);
+    navigateTo('home');
+  };
 
   const isActive = (page: NavigablePage) => currentPage === page;
 
   return (
-    <header className="sticky top-0 z-50 w-full">
-      {/* Top Bar */}
-      <div className="bg-[#0F172A] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 lg:h-16">
+    <header className={`sticky top-0 z-50 w-full bg-white transition-all duration-150 ${isElevated ? 'shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : ''}`}>
+      <div className="border-b border-[#e5e7eb]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between gap-2 lg:h-16">
             {/* Logo */}
             <button 
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 flex-shrink-0"
+              className="flex flex-shrink-0 items-center gap-2"
             >
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#111111]">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
-              <div className="hidden sm:block text-left">
-                <span className="font-bold text-lg">Musika</span>
-                <span className="text-xs text-slate-400 block -mt-1">International Student</span>
+              <div className="hidden text-left sm:block">
+                <span className="text-lg font-bold text-[#111111]">Musika</span>
+                <span className="-mt-1 block text-xs text-[#6b7280]">International Student</span>
               </div>
             </button>
 
             {/* Location Selector - Desktop */}
-            <div className="hidden lg:flex items-center gap-2 text-sm text-slate-300 ml-4">
-              <MapPin className="w-4 h-4 text-emerald-400" />
+            <div className="ml-4 hidden items-center gap-2 text-sm text-[#6b7280] lg:flex">
+              <MapPin className="h-4 w-4 text-[#f5a623]" />
               <span>Pune, India</span>
-              <button className="text-emerald-400 hover:text-emerald-300 text-xs">
+              <button className="text-xs text-[#111111] underline-offset-2 hover:underline">
                 Update Location
               </button>
             </div>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-xl mx-4 lg:mx-8">
+            <div className="mx-3 hidden max-w-xl flex-1 md:flex lg:mx-8">
               <div
-                className={`relative w-full transition-all duration-300 ${
-                  isSearchFocused ? 'ring-2 ring-emerald-500 rounded-lg' : ''
+                className={`relative w-full transition-all duration-150 ${
+                  isSearchFocused ? 'rounded-full ring-2 ring-[#111111]' : ''
                 }`}
               >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
                 <input
                   type="text"
                   placeholder="Search for Accommodation, Transportation..."
-                  className="w-full h-10 pl-10 pr-4 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none"
+                  className="h-10 w-full rounded-full border border-[#e5e7eb] bg-white pl-10 pr-20 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none"
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                 />
+                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[#6b7280]">
+                  <button className="rounded-full p-1.5 hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Voice search">
+                    <Mic className="h-4 w-4" />
+                  </button>
+                  <button className="rounded-full p-1.5 hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Image search">
+                    <Camera className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2 lg:gap-4">
+            <div className="flex items-center gap-2 lg:gap-3">
               {/* Language Selector */}
-              <button className="hidden sm:flex items-center gap-1 text-sm text-slate-300 hover:text-white">
-                <Globe className="w-4 h-4" />
+              <button className="hidden items-center gap-1 text-sm text-[#374151] hover:text-[#111111] sm:flex">
+                <Globe className="h-4 w-4" />
                 <span>EN</span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="h-3 w-3" />
               </button>
 
-              {/* Icons */}
-              <button className="relative p-2 text-slate-300 hover:text-white">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
-              </button>
-              
-              {/* Cart Icon with Badge */}
-              <button 
-                className="relative p-2 text-slate-300 hover:text-white"
-                onClick={() => setIsCartOpen(true)}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold px-1.5">
-                    {totalItems > 99 ? '99+' : totalItems}
-                  </span>
-                )}
-              </button>
-              
-              <button
-                className="hidden sm:block p-2 text-slate-300 hover:text-white"
-                onClick={() => navigateTo('profile')}
-              >
-                <User className="w-5 h-5" />
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button className="relative rounded-full p-2 text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111111]" aria-label="Notifications">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute right-1 top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#111111] px-1 text-[10px] text-white">
+                      3
+                    </span>
+                  </button>
 
-              {/* Auth Buttons - Desktop */}
-              <div className="hidden lg:flex items-center gap-2 ml-2">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-white hover:bg-slate-800"
-                  onClick={() => navigateTo('signin')}
-                >
-                  Login
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-emerald-500 text-emerald-400 hover:bg-emerald-500/10"
-                  onClick={() => navigateTo('signup')}
-                >
-                  Sign Up
-                </Button>
-              </div>
+                  <button
+                    className="relative rounded-full p-2 text-[#374151] hover:bg-[#f3f4f6] hover:text-[#111111]"
+                    onClick={() => setIsCartOpen(true)}
+                    aria-label="Shopping cart"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#111111] px-1.5 text-[10px] font-semibold text-white">
+                      {totalItems > 99 ? '99+' : totalItems}
+                    </span>
+                  </button>
+
+                  <div className="relative hidden sm:block">
+                    <button
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#111111] text-sm font-semibold text-white"
+                      onClick={() => setProfileMenuOpen((prev) => !prev)}
+                      aria-label="User menu"
+                    >
+                      {avatarLabel}
+                    </button>
+                    {profileMenuOpen ? (
+                      <div className="absolute right-0 top-11 w-52 rounded-xl border border-[#e5e7eb] bg-white p-1 shadow-lg">
+                        <button onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                          <LayoutDashboard className="h-4 w-4" />
+                          My Dashboard
+                        </button>
+                        <button onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                          <Package className="h-4 w-4" />
+                          My Orders
+                        </button>
+                        <button onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                          <MessageSquare className="h-4 w-4" />
+                          Messages
+                        </button>
+                        <button onClick={() => { navigateTo('profile'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb]">
+                          <Settings className="h-4 w-4" />
+                          Settings
+                        </button>
+                        <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#ef4444] hover:bg-[#fef2f2]">
+                          <LogOut className="h-4 w-4" />
+                          Logout
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <div className="hidden items-center gap-2 lg:flex">
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-[#111111] bg-transparent text-[#111111] hover:bg-[#f3f4f6]"
+                    onClick={() => navigateTo('signin')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    className="rounded-full bg-[#111111] text-white hover:bg-black"
+                    onClick={() => navigateTo('signup')}
+                  >
+                    SignUp
+                  </Button>
+                </div>
+              )}
 
               {/* Mobile Menu Button */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <button className="lg:hidden p-2 text-slate-300 hover:text-white">
-                    <Menu className="w-6 h-6" />
+                  <button className="p-2 text-[#374151] hover:text-[#111111] lg:hidden" aria-label="Open navigation menu">
+                    <Menu className="h-6 w-6" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] bg-[#0F172A] border-slate-800 p-0">
+                <SheetContent side="right" className="w-[300px] border-[#e5e7eb] bg-white p-0">
                   <div className="flex flex-col h-full">
                     {/* Mobile Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-slate-800">
-                      <span className="text-white font-bold">Menu</span>
+                    <div className="flex items-center justify-between border-b border-[#e5e7eb] p-4">
+                      <span className="font-bold text-[#111111]">Menu</span>
                     </div>
 
                     {/* Mobile Search */}
                     <div className="p-4">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-full h-10 pl-10 pr-4 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="h-10 w-full rounded-full border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#111111]"
                         />
                       </div>
                     </div>
@@ -168,7 +233,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                         {navLinks.map((link) => (
                           <li key={link.label}>
                             <button
-                              className="block w-full text-left py-3 px-4 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                              className="block w-full rounded-lg px-4 py-3 text-left text-[#374151] transition-all duration-150 hover:bg-[#f9fafb] hover:text-[#111111]"
                               onClick={() => {
                                 navigateTo(link.page);
                                 setMobileMenuOpen(false);
@@ -182,26 +247,39 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     </nav>
 
                     {/* Mobile Auth */}
-                    <div className="p-4 border-t border-slate-800 space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-slate-600 text-white hover:bg-slate-800"
-                        onClick={() => {
-                          navigateTo('signin');
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        Login
-                      </Button>
-                      <Button 
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                        onClick={() => {
-                          navigateTo('signup');
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        Sign Up
-                      </Button>
+                    <div className="space-y-2 border-t border-[#e5e7eb] p-4">
+                      {isAuthenticated ? (
+                        <>
+                          <Button className="w-full bg-[#111111] text-white hover:bg-black" onClick={() => { navigateTo('vendor-dashboard'); setMobileMenuOpen(false); }}>
+                            My Dashboard
+                          </Button>
+                          <Button variant="outline" className="w-full border-[#111111]" onClick={handleLogout}>
+                            Logout
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            className="w-full border-[#111111] text-[#111111]"
+                            onClick={() => {
+                              navigateTo('signin');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Login
+                          </Button>
+                          <Button
+                            className="w-full bg-[#111111] text-white hover:bg-black"
+                            onClick={() => {
+                              navigateTo('signup');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            SignUp
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </SheetContent>
@@ -212,18 +290,18 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
       </div>
 
       {/* Navigation Bar - Desktop */}
-      <nav className="hidden lg:block bg-[#0F172A] border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-12">
+      <nav className="hidden border-b border-[#e5e7eb] bg-white lg:block">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-12 items-center justify-between">
             <ul className="flex items-center gap-8">
               {navLinks.map((link) => (
                 <li key={link.label}>
                   <button
                     onClick={() => navigateTo(link.page)}
-                    className={`text-sm transition-colors ${
+                    className={`border-b-2 pb-[13px] text-sm transition-all duration-150 ${
                       isActive(link.page)
-                        ? 'text-white font-medium'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'border-[#111111] font-medium text-[#111111]'
+                        : 'border-transparent text-[#6b7280] hover:text-[#111111]'
                     }`}
                   >
                     {link.label}
