@@ -57,7 +57,6 @@ const studentNavItems = [
   { label: 'Saved Resources', icon: BookMarked },
   { label: 'Community', icon: Users },
   { label: 'My Tickets', icon: LifeBuoy },
-  { label: 'Settings', icon: Settings },
 ];
 
 const studentStats = [
@@ -231,7 +230,6 @@ const vendorNavItems = [
   { label: 'Messages', icon: MessageSquare },
   { label: 'Analytics', icon: TrendingUp },
   { label: 'Earnings', icon: TrendingUp },
-  { label: 'Settings', icon: Settings },
 ];
 
 const initialTags = ['Shona', 'Vegan', 'Cultural'];

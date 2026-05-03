@@ -1,65 +1,83 @@
 import { useMemo, useState } from 'react';
 import { Heart, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimatedSection } from '@/components/AnimatedSection';
-import { marketplaceProducts } from '@/lib/data';
+import { getVendorAvatarUrl, marketplaceProducts } from '@/lib/data';
 import { useCart } from '@/hooks/useCart';
 import {
   QuickAddButton,
   UnifiedSearchBar,
-  VerifiedBadge,
   formatINR,
 } from '@/components/musika/ui-primitives';
 
+const grocerySubcategories = ['All', 'Fruits', 'Vegetables', 'Juices', 'Drinks', 'Snacks', 'Cereals'];
+const ITEMS_PER_PAGE = 4;
+
 export function Marketplace() {
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showCartAdded, setShowCartAdded] = useState(false);
-  const [showReadMore, setShowReadMore] = useState(false);
-  const [activeFilters, setActiveFilters] = useState(['Accommodation', 'Near Campus']);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('All');
+  const [wishlisted, setWishlisted] = useState<number[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const { addItem } = useCart();
 
-  const mainProduct = marketplaceProducts[0];
-  const relatedProducts = marketplaceProducts.slice(1);
+  const filteredProducts = useMemo(() => {
+    return marketplaceProducts.filter((product) => {
+      const subcategoryMatch = selectedSubcategory === 'All' || product.subcategory === selectedSubcategory;
+      const textMatch =
+        searchTerm.trim().length === 0 ||
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.subcategory ?? '').toLowerCase().includes(searchTerm.toLowerCase());
 
-  const productImages = useMemo(
-    () => [
-      'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1571687949920-c4040f125f3d?w=500&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1627308595189-7830a5c91f9f?w=500&auto=format&fit=crop',
-    ],
-    []
+      return subcategoryMatch && textMatch;
+    });
+  }, [searchTerm, selectedSubcategory]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (product: (typeof marketplaceProducts)[number]) => {
     addItem({
-      id: mainProduct.id,
-      name: mainProduct.name,
-      price: mainProduct.price,
+      id: product.id,
+      name: product.name,
+      price: product.price,
       currency: '₹',
-      image: productImages[selectedImage],
-      vendor: mainProduct.vendor ?? 'Various Vendors',
-      category: mainProduct.category ?? 'Marketplace',
+      image: product.image,
+      vendor: product.vendor ?? 'Various Vendors',
+      category: product.subcategory ?? 'Marketplace',
     });
+  };
 
-    setShowCartAdded(true);
-    setTimeout(() => setShowCartAdded(false), 2000);
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedSubcategory('All');
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleSubcategoryChange = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
+    setCurrentPage(1);
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <AnimatedSection className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-[#111111]">Your Gateway to Reliable Services</h1>
-          <p className="mt-2 text-[#6b7280]">Discover trusted services from verified providers tailored for International Students</p>
+          <h1 className="text-3xl font-bold text-[#111111]">Marketplace Grocery Essentials</h1>
+          <p className="mt-2 text-[#6b7280]">Browse fruits, vegetables, juices, drinks, snacks, cereals and more from trusted vendors</p>
         </AnimatedSection>
 
         <UnifiedSearchBar
-          placeholder="Search for accommodation, transportation..."
+          placeholder="Search grocery items, brands, or categories..."
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearchChange}
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -68,162 +86,148 @@ export function Marketplace() {
             <SlidersHorizontal className="h-3 w-3" />
             All Filters
           </button>
-          {activeFilters.map((filter) => (
+          {selectedSubcategory !== 'All' ? (
             <button
-              key={filter}
-              onClick={() => setActiveFilters((prev) => prev.filter((item) => item !== filter))}
+              onClick={() => setSelectedSubcategory('All')}
               className="flex items-center gap-1 rounded-full bg-[#111111] px-3 py-1.5 text-sm text-white"
             >
-              {filter}
+              {selectedSubcategory}
               <X className="h-3 w-3" />
             </button>
-          ))}
+          ) : null}
+          {searchTerm.trim() ? (
+            <button onClick={() => setSearchTerm('')} className="flex items-center gap-1 rounded-full bg-[#111111] px-3 py-1.5 text-sm text-white">
+              Search
+              <X className="h-3 w-3" />
+            </button>
+          ) : null}
+          {(selectedSubcategory !== 'All' || searchTerm.trim()) ? (
+            <button onClick={clearAllFilters} className="text-sm text-[#6b7280] hover:text-[#111111]">Clear All</button>
+          ) : null}
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 xl:grid-cols-[1.5fr_1fr]">
-          <section>
-            <h2 className="mb-3 text-4xl font-bold text-[#111111]">High Quality Mazoe</h2>
-            <div className="mb-5 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-[#e5e7eb]" />
-              <button className="text-xl font-semibold text-[#111111] hover:underline">{mainProduct.vendor}</button>
-              <VerifiedBadge />
-            </div>
+        <section className="mb-8 rounded-2xl border border-[#e5e7eb] bg-white p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold text-[#111111]">Browse Grocery Categories</h2>
+            <Button onClick={clearAllFilters} className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white hover:bg-black">View All</Button>
+          </div>
 
-            <div className="grid gap-4 md:grid-cols-[72px_1fr]">
-              <div className="order-2 flex gap-2 md:order-1 md:flex-col">
-                {productImages.map((image, index) => (
-                  <button
-                    key={image}
-                    onClick={() => setSelectedImage(index)}
-                    className={`h-[72px] w-[72px] overflow-hidden rounded-xl border-2 ${
-                      selectedImage === index ? 'border-[#f5a623]' : 'border-[#e5e7eb]'
-                    }`}
-                  >
-                    <img src={image} alt={`Thumbnail ${index + 1}`} className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-
-              <div className="order-1 md:order-2">
-                <div className="relative overflow-hidden rounded-xl bg-[#f3f4f6]">
-                  <img src={productImages[selectedImage]} alt={mainProduct.name} className="h-[420px] w-full object-contain" />
-                  <button
-                    onClick={() => setIsWishlisted((prev) => !prev)}
-                    className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white"
-                    aria-label="Toggle wishlist"
-                  >
-                    <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-[#f5a623] text-[#f5a623]' : 'text-[#374151]'}`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <aside className="rounded-2xl bg-[#1a1f2e] p-6 text-white">
-            <h3 className="text-[22px] font-bold">{mainProduct.name}</h3>
-            <p className="mt-2 text-sm text-[#9ca3af] line-through">{formatINR(200)}</p>
-            <p className="text-[28px] font-extrabold">{formatINR(mainProduct.price)}</p>
-
-            <div className="mt-6 space-y-3">
-              <div className="relative">
-                <Button
-                  onClick={handleAddToCart}
-                  className="h-12 w-full rounded-lg bg-white font-semibold text-[#111111] transition-all duration-150 hover:scale-[1.01] hover:bg-white"
-                >
-                  Add to Cart
-                </Button>
-                {showCartAdded ? (
-                  <span className="absolute -bottom-8 left-0 rounded bg-[#111111] px-2 py-1 text-xs text-white">Added to cart ✓</span>
-                ) : null}
-              </div>
-              <Button
-                variant="outline"
-                className="h-12 w-full rounded-lg border-white bg-transparent font-semibold text-white transition-all duration-150 hover:bg-white/20"
+          <div className="flex flex-wrap gap-2">
+            {grocerySubcategories.map((subcategory) => (
+              <button
+                key={subcategory}
+                onClick={() => handleSubcategoryChange(subcategory)}
+                className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                  selectedSubcategory === subcategory
+                    ? 'bg-[#111111] text-white'
+                    : 'border border-[#d1d5db] bg-white text-[#374151] hover:border-[#111111]'
+                }`}
               >
-                Buy Now
-              </Button>
-            </div>
-
-            <Tabs defaultValue="description" className="mt-6">
-              <TabsList className="h-auto w-full justify-start gap-4 rounded-none bg-transparent px-0">
-                <TabsTrigger
-                  value="description"
-                  className="rounded-none border-b-2 border-transparent px-0 pb-2 text-[#9ca3af] data-[state=active]:border-white data-[state=active]:bg-transparent data-[state=active]:text-white"
-                >
-                  Description
-                </TabsTrigger>
-                <TabsTrigger
-                  value="additional"
-                  className="rounded-none border-b-2 border-transparent px-0 pb-2 text-[#9ca3af] data-[state=active]:border-white data-[state=active]:bg-transparent data-[state=active]:text-white"
-                >
-                  Additional Info
-                </TabsTrigger>
-                <TabsTrigger
-                  value="reviews"
-                  className="rounded-none border-b-2 border-transparent px-0 pb-2 text-[#9ca3af] data-[state=active]:border-white data-[state=active]:bg-transparent data-[state=active]:text-white"
-                >
-                  Reviews
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="description" className="mt-3 text-[#d1d5db]">
-                <p className={!showReadMore ? 'line-clamp-3' : ''}>{mainProduct.description}</p>
-                <button onClick={() => setShowReadMore((prev) => !prev)} className="mt-2 text-sm text-[#f5a623]">
-                  {showReadMore ? 'Read less' : 'Read more'}
-                </button>
-              </TabsContent>
-              <TabsContent value="additional" className="mt-3 text-[#d1d5db]">
-                <ul className="space-y-1 text-sm">
-                  <li>• Imported and quality tested</li>
-                  <li>• Suitable for student hostels</li>
-                  <li>• Secure packaging included</li>
-                </ul>
-              </TabsContent>
-              <TabsContent value="reviews" className="mt-3 text-[#d1d5db]">
-                <p>Rated 4.7 by 89 students for taste, value, and freshness.</p>
-              </TabsContent>
-            </Tabs>
-          </aside>
-        </div>
-
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-[#111111]">Customers Also Bought</h2>
-          <div className="mt-4 flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {relatedProducts.slice(0, 5).map((product) => (
-              <article key={product.id} className="group w-[180px] shrink-0 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-                <div className="relative">
-                  <img src={product.image} alt={product.name} className="h-[180px] w-full object-cover" />
-                  <div className="absolute bottom-2 right-2 opacity-0 transition-all duration-150 group-hover:opacity-100">
-                    <QuickAddButton
-                      onAdd={() =>
-                        addItem({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          currency: '₹',
-                          image: product.image as string,
-                          vendor: 'Various Vendors',
-                          category: 'Marketplace',
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="p-3">
-                  <p className="line-clamp-2 text-sm font-semibold text-[#111111]">{product.name}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-sm font-bold text-[#111111]">{formatINR(product.price)}</span>
-                    {product.originalPrice ? (
-                      <span className="text-xs text-[#9ca3af] line-through">{formatINR(product.originalPrice)}</span>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
+                {subcategory}
+              </button>
             ))}
           </div>
         </section>
+
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-[#111111]">
+            {selectedSubcategory === 'All' ? 'All Grocery Items' : `${selectedSubcategory} Items`}
+          </h3>
+          <p className="text-sm text-[#6b7280]">{new Intl.NumberFormat('en-IN').format(filteredProducts.length)} items</p>
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#d1d5db] bg-[#f9fafb] px-6 py-10 text-center">
+            <p className="text-lg font-semibold text-[#111111]">No grocery items found</p>
+            <p className="mt-1 text-sm text-[#6b7280]">Try another search or clear filters to see all products.</p>
+            <Button onClick={clearAllFilters} className="mt-4 bg-[#111111] text-white hover:bg-black">Clear Filters</Button>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedProducts.map((product) => {
+              const isFavorited = wishlisted.includes(product.id);
+              return (
+                <article key={product.id} className="group overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
+                  <div className="relative">
+                    <img src={product.image} alt={product.name} className="h-[210px] w-full object-cover" />
+                    <button
+                      onClick={() =>
+                        setWishlisted((prev) =>
+                          prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
+                        )
+                      }
+                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90"
+                      aria-label="Toggle wishlist"
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorited ? 'fill-[#f5a623] text-[#f5a623]' : 'text-[#374151]'}`} />
+                    </button>
+                    <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                      {product.subcategory ?? 'Grocery'}
+                    </span>
+                    <div className="absolute bottom-3 right-3 opacity-0 transition-opacity group-hover:opacity-100">
+                      <QuickAddButton onAdd={() => handleAddToCart(product)} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 p-4">
+                    <p className="line-clamp-2 text-sm font-semibold text-[#111111]">{product.name}</p>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={getVendorAvatarUrl(product.vendor ?? 'Various Vendors')}
+                        alt={product.vendor ?? 'Various Vendors'}
+                        className="h-5 w-5 shrink-0 rounded-full bg-[#f3f4f6] object-cover"
+                      />
+                      <p className="text-xs text-[#6b7280]">{product.vendor ?? 'Various Vendors'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold text-[#111111]">{formatINR(product.price)}</span>
+                      {product.originalPrice ? (
+                        <span className="text-xs text-[#9ca3af] line-through">{formatINR(product.originalPrice)}</span>
+                      ) : null}
+                    </div>
+                    <Button onClick={() => handleAddToCart(product)} className="h-9 w-full bg-[#111111] text-xs text-white hover:bg-black">
+                      Add to Cart
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {totalPages > 1 ? (
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`h-8 min-w-8 rounded-full px-2 ${
+                  page === currentPage
+                    ? 'bg-[#111111] text-white'
+                    : 'border border-[#e5e7eb] text-[#374151]'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

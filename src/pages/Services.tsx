@@ -3,6 +3,7 @@ import {
   Building,
   Car,
   ChevronDown,
+  Globe,
   Heart,
   HeartPulse,
   Scale,
@@ -15,7 +16,15 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection } from '@/components/AnimatedSection';
-import { categories, featuredVendors, locations, popularServices, services } from '@/lib/data';
+import {
+  categories,
+  featuredVendors,
+  getDeterministicLanguages,
+  getVendorAvatarUrl,
+  locations,
+  popularServices,
+  services,
+} from '@/lib/data';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import {
   EmptyState,
@@ -29,12 +38,7 @@ interface ServicesProps {
   navigateTo: (page: Page) => void;
 }
 
-const languagePreset: Record<string, string[]> = {
-  accommodation: ['English', 'Hindi', 'Mandarin'],
-  transportation: ['English', 'Hindi', 'Arabic'],
-  legal: ['English', 'Hindi', 'Arabic'],
-  healthcare: ['English', 'Hindi'],
-};
+const ITEMS_PER_PAGE = 4;
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Accommodation: Building,
@@ -46,11 +50,22 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const sectionCategories = ['Accommodation', 'Transportation', 'Legal Offices', 'Health & Wellness', 'Marketplace'];
 
+const sectionCategoryToDataCategory: Record<string, string> = {
+  Accommodation: 'accommodation',
+  Transportation: 'transportation',
+  'Legal Offices': 'legal',
+  'Health & Wellness': 'healthcare',
+};
+
 export function Services({ navigateTo }: ServicesProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [wishlisted, setWishlisted] = useState<number[]>([]);
+  const [showAllVendors, setShowAllVendors] = useState(false);
+  const [forceServiceResults, setForceServiceResults] = useState(false);
+  const [featuredPage, setFeaturedPage] = useState(1);
+  const [resultsPage, setResultsPage] = useState(1);
   const { user } = useAuth();
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Guest';
   const displayEmail = user?.email ?? '';
@@ -77,22 +92,112 @@ export function Services({ navigateTo }: ServicesProps) {
 
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+    setResultsPage(1);
   };
 
   const toggleLocation = (id: string) => {
     setSelectedLocations((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+    setResultsPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setResultsPage(1);
   };
 
   const clearAllFilters = () => {
     setSearchTerm('');
     setSelectedCategories([]);
     setSelectedLocations([]);
+    setForceServiceResults(false);
+    setFeaturedPage(1);
+    setResultsPage(1);
   };
 
   const hasActiveFilters =
     searchTerm.trim().length > 0 ||
     selectedCategories.length > 0 ||
     selectedLocations.length > 0;
+
+  const showServiceResults = hasActiveFilters || forceServiceResults;
+
+  const featuredServicePages = Math.ceil(popularServices.length / ITEMS_PER_PAGE);
+  const featuredServices = popularServices.slice(
+    (featuredPage - 1) * ITEMS_PER_PAGE,
+    featuredPage * ITEMS_PER_PAGE
+  );
+
+  const resultsPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedFiltered = filtered.slice(
+    (resultsPage - 1) * ITEMS_PER_PAGE,
+    resultsPage * ITEMS_PER_PAGE
+  );
+
+  const handleViewAllServices = () => {
+    setSearchTerm('');
+    setSelectedCategories([]);
+    setSelectedLocations([]);
+    setForceServiceResults(true);
+    setResultsPage(1);
+  };
+
+  const handleSectionCategorySelect = (category: string) => {
+    if (category === 'Marketplace') {
+      navigateTo('marketplace');
+      return;
+    }
+
+    const mapped = sectionCategoryToDataCategory[category];
+    if (!mapped) return;
+
+    setSearchTerm('');
+    setSelectedLocations([]);
+    setSelectedCategories([mapped]);
+    setForceServiceResults(true);
+    setResultsPage(1);
+  };
+
+  const renderPagination = (
+    currentPage: number,
+    totalPages: number,
+    onPageChange: (page: number) => void
+  ) => {
+    if (totalPages <= 1) {
+      return null;
+    }
+
+    return (
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Prev
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`h-8 min-w-8 rounded-full px-2 ${
+              page === currentPage
+                ? 'bg-[#111111] text-white'
+                : 'border border-[#e5e7eb] text-[#374151]'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
 
   const sidebar = (
     <div className="flex h-full flex-col rounded-2xl bg-[#1a1f2e] p-5 text-[#d1d5db]">
@@ -196,7 +301,7 @@ export function Services({ navigateTo }: ServicesProps) {
         <UnifiedSearchBar
           placeholder="Search for accommodation, transportation..."
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearchChange}
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -235,7 +340,7 @@ export function Services({ navigateTo }: ServicesProps) {
             </Sheet>
           </div>
 
-          {hasActiveFilters ? (
+          {showServiceResults ? (
             <div className="ml-auto flex items-center gap-3 text-sm text-[#6b7280]">
               <span>{new Intl.NumberFormat('en-IN').format(filtered.length)} Results</span>
               <button className="flex items-center gap-2 rounded-full border border-[#e5e7eb] px-3 py-2 text-[#374151]">
@@ -250,19 +355,31 @@ export function Services({ navigateTo }: ServicesProps) {
           <aside className="hidden lg:block">{sidebar}</aside>
 
           <div>
-            {!hasActiveFilters ? (
+            {!showServiceResults ? (
               <main className="space-y-8">
                 <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-[#111111]">Featured Vendors</h2>
-                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                    <button
+                      onClick={() => setShowAllVendors((prev) => !prev)}
+                      className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white"
+                    >
+                      {showAllVendors ? 'Show Less' : 'View All'}
+                    </button>
                   </div>
                   <div className="grid gap-4 xl:grid-cols-3">
-                    {featuredVendors.map((vendor) => (
+                    {(showAllVendors ? featuredVendors : featuredVendors.slice(0, 3)).map((vendor) => (
                       <article key={vendor.id} className="flex items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3">
                         <img src={vendor.image} alt={vendor.name} className="h-20 w-24 shrink-0 rounded-xl object-cover" />
                         <div>
-                          <p className="text-sm font-bold text-white">{vendor.name}</p>
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={getVendorAvatarUrl(vendor.name)}
+                              alt={vendor.name}
+                              className="h-5 w-5 shrink-0 rounded-full object-cover"
+                            />
+                            <p className="text-sm font-bold text-white">{vendor.name}</p>
+                          </div>
                           <p className="mt-1 text-xs">
                             <span className="text-[#f5a623]">{'★'.repeat(Math.round(vendor.rating))}{'☆'.repeat(5 - Math.round(vendor.rating))}</span>
                             <span className="text-[#9ca3af]"> ({vendor.rating.toFixed(1)})</span>
@@ -276,7 +393,7 @@ export function Services({ navigateTo }: ServicesProps) {
                 <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-[#111111]">Browse Categories</h2>
-                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                    <button onClick={clearAllFilters} className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                     {sectionCategories.map((category) => {
@@ -284,6 +401,7 @@ export function Services({ navigateTo }: ServicesProps) {
                       return (
                         <button
                           key={category}
+                          onClick={() => handleSectionCategorySelect(category)}
                           className="rounded-xl border border-transparent bg-[#111827] p-4 text-center text-white transition-all duration-150 hover:scale-[1.01] hover:border-[#f5a623]"
                         >
                           <Icon className="mx-auto mb-2 h-6 w-6" />
@@ -297,11 +415,16 @@ export function Services({ navigateTo }: ServicesProps) {
                 <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-[#111111]">Most Popular Services</h2>
-                    <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                    <button
+                      onClick={handleViewAllServices}
+                      className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white"
+                    >
+                      View All
+                    </button>
                   </div>
 
                   <div className="grid gap-5 xl:grid-cols-2">
-                    {popularServices.map((service) => (
+                    {featuredServices.map((service) => (
                       <article key={service.id} className="flex min-h-[200px] overflow-hidden rounded-2xl bg-[#1a1f2e]">
                         <div className="relative w-[42%] shrink-0">
                           <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
@@ -333,15 +456,19 @@ export function Services({ navigateTo }: ServicesProps) {
                             ))}
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
-                            {['English', 'Mandarin', 'Arabic'].map((lang) => (
+                            <Globe className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                            {getDeterministicLanguages(`${service.id}-${service.vendor}`).map((lang) => (
                               <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
                                 {lang}
                               </span>
                             ))}
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                            <img
+                              src={getVendorAvatarUrl(service.vendor)}
+                              alt={service.vendor}
+                              className="h-5 w-5 shrink-0 rounded-full bg-[#374151] object-cover"
+                            />
                             <span className="text-[11px] font-medium text-white">{service.vendor}</span>
                             <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
                           </div>
@@ -358,6 +485,8 @@ export function Services({ navigateTo }: ServicesProps) {
                       </article>
                     ))}
                   </div>
+
+                  {renderPagination(featuredPage, featuredServicePages, setFeaturedPage)}
                 </section>
               </main>
             ) : filtered.length === 0 ? (
@@ -365,7 +494,7 @@ export function Services({ navigateTo }: ServicesProps) {
             ) : (
               <>
                 <div className="grid gap-6 xl:grid-cols-2">
-                  {filtered.map((service) => {
+                  {paginatedFiltered.map((service) => {
                     const favorite = wishlisted.includes(service.id);
                     return (
                       <article
@@ -410,15 +539,19 @@ export function Services({ navigateTo }: ServicesProps) {
                             ))}
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
-                            {(languagePreset[service.category] ?? ['English', 'Hindi']).map((lang) => (
+                            <Globe className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                            {getDeterministicLanguages(`${service.id}-${service.vendor}`).map((lang) => (
                               <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
                                 {lang}
                               </span>
                             ))}
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                            <img
+                              src={getVendorAvatarUrl(service.vendor)}
+                              alt={service.vendor}
+                              className="h-5 w-5 shrink-0 rounded-full bg-[#374151] object-cover"
+                            />
                             <span className="text-[11px] font-medium text-white">{service.vendor}</span>
                             <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
                           </div>
@@ -452,18 +585,7 @@ export function Services({ navigateTo }: ServicesProps) {
                   </div>
                 </section>
 
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
-                  <button className="font-medium text-[#111111]">Musika &gt;</button>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
-                    <button
-                      key={page}
-                      className={`h-8 min-w-8 rounded-full px-2 ${page === 1 ? 'bg-[#111111] text-white' : 'border border-[#e5e7eb] text-[#374151]'}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button className="text-[#374151]">Next</button>
-                </div>
+                {renderPagination(resultsPage, resultsPages, setResultsPage)}
               </>
             )}
           </div>

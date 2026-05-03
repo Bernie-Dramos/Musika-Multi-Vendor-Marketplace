@@ -3,6 +3,7 @@ import {
   Building,
   Car,
   ChevronDown,
+  Globe,
   Heart,
   HeartPulse,
   Scale,
@@ -14,8 +15,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AnimatedSection } from '@/components/AnimatedSection';
-import { categories, featuredVendors, locations, popularServices } from '@/lib/data';
+import {
+  categories,
+  featuredVendors,
+  getDeterministicLanguages,
+  getVendorAvatarUrl,
+  locations,
+  popularServices,
+  services,
+} from '@/lib/data';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   UnifiedSearchBar,
   formatINR,
@@ -31,11 +41,122 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const sectionCategories = ['Accommodation', 'Transportation', 'Legal Offices', 'Health & Wellness', 'Marketplace'];
 
+const sectionCategoryToDataCategory: Record<string, string> = {
+  Accommodation: 'accommodation',
+  Transportation: 'transportation',
+  'Legal Offices': 'legal',
+  'Health & Wellness': 'healthcare',
+};
+
+const ITEMS_PER_PAGE = 4;
+
+const normalizeCategory = (category: string) => {
+  const key = category.toLowerCase();
+  if (key.includes('transport')) return 'transportation';
+  if (key.includes('legal')) return 'legal';
+  if (key.includes('health')) return 'healthcare';
+  if (key.includes('accommodation')) return 'accommodation';
+  if (key.includes('market')) return 'marketplace';
+  return key;
+};
+
 export function Categories() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAllVendors, setShowAllVendors] = useState(false);
+  const [showAllServices, setShowAllServices] = useState(false);
+  const [selectedSectionCategory, setSelectedSectionCategory] = useState<string | null>(null);
+  const [servicesPage, setServicesPage] = useState(1);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Guest';
   const displayEmail = user?.email ?? '';
+
+  const servicesForSection = (showAllServices ? services : popularServices)
+    .filter((service) => {
+      if (!selectedSectionCategory) return true;
+      const targetCategory = sectionCategoryToDataCategory[selectedSectionCategory];
+      return normalizeCategory(service.category) === targetCategory;
+    })
+    .filter((service) => {
+      if (!searchTerm.trim()) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        service.title.toLowerCase().includes(term) ||
+        service.description.toLowerCase().includes(term)
+      );
+    });
+
+  const paginatedServices = servicesForSection.slice(
+    (servicesPage - 1) * ITEMS_PER_PAGE,
+    servicesPage * ITEMS_PER_PAGE
+  );
+  const servicePages = Math.ceil(servicesForSection.length / ITEMS_PER_PAGE);
+
+  const handleCategoryButtonClick = (category: string) => {
+    if (category === 'Marketplace') {
+      navigate('/marketplace');
+      return;
+    }
+
+    setSelectedSectionCategory(category);
+    setShowAllServices(true);
+    setServicesPage(1);
+  };
+
+  const clearSectionSelection = () => {
+    setSelectedSectionCategory(null);
+    setShowAllServices(false);
+    setServicesPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setServicesPage(1);
+  };
+
+  const handleViewAllServices = () => {
+    setSelectedSectionCategory(null);
+    setShowAllServices(true);
+    setServicesPage(1);
+  };
+
+  const renderPagination = () => {
+    if (servicePages <= 1) {
+      return null;
+    }
+
+    return (
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+        <button
+          onClick={() => setServicesPage((prev) => Math.max(1, prev - 1))}
+          disabled={servicesPage === 1}
+          className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Prev
+        </button>
+        {Array.from({ length: servicePages }, (_, index) => index + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => setServicesPage(page)}
+            className={`h-8 min-w-8 rounded-full px-2 ${
+              page === servicesPage
+                ? 'bg-[#111111] text-white'
+                : 'border border-[#e5e7eb] text-[#374151]'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => setServicesPage((prev) => Math.min(servicePages, prev + 1))}
+          disabled={servicesPage === servicePages}
+          className="rounded-full border border-[#e5e7eb] px-3 py-1.5 text-[#374151] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
 
   const sidebar = (
     <div className="flex h-full flex-col rounded-2xl bg-[#1a1f2e] p-5 text-[#d1d5db]">
@@ -127,7 +248,7 @@ export function Categories() {
         <UnifiedSearchBar
           placeholder="Search for accommodation, transportation..."
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearchChange}
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -161,14 +282,26 @@ export function Categories() {
             <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-[#111111]">Featured Vendors</h2>
-                <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                <button
+                  onClick={() => setShowAllVendors((prev) => !prev)}
+                  className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white"
+                >
+                  {showAllVendors ? 'Show Less' : 'View All'}
+                </button>
               </div>
               <div className="grid gap-4 xl:grid-cols-3">
-                {featuredVendors.map((vendor) => (
+                {(showAllVendors ? featuredVendors : featuredVendors.slice(0, 3)).map((vendor) => (
                   <article key={vendor.id} className="flex items-center gap-3 rounded-2xl bg-[#1a1f2e] p-3">
                     <img src={vendor.image} alt={vendor.name} className="h-20 w-24 shrink-0 rounded-xl object-cover" />
                     <div>
-                      <p className="text-sm font-bold text-white">{vendor.name}</p>
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={getVendorAvatarUrl(vendor.name)}
+                          alt={vendor.name}
+                          className="h-5 w-5 shrink-0 rounded-full object-cover"
+                        />
+                        <p className="text-sm font-bold text-white">{vendor.name}</p>
+                      </div>
                       <p className="mt-1 text-xs">
                         <span className="text-[#f5a623]">{'★'.repeat(Math.round(vendor.rating))}{'☆'.repeat(5 - Math.round(vendor.rating))}</span>
                         <span className="text-[#9ca3af]"> ({vendor.rating.toFixed(1)})</span>
@@ -182,7 +315,7 @@ export function Categories() {
             <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-[#111111]">Browse Categories</h2>
-                <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                <button onClick={clearSectionSelection} className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {sectionCategories.map((category) => {
@@ -190,7 +323,10 @@ export function Categories() {
                   return (
                     <button
                       key={category}
-                      className="rounded-xl border border-transparent bg-[#111827] p-4 text-center text-white transition-all duration-150 hover:scale-[1.01] hover:border-[#f5a623]"
+                      onClick={() => handleCategoryButtonClick(category)}
+                      className={`rounded-xl border bg-[#111827] p-4 text-center text-white transition-all duration-150 hover:scale-[1.01] hover:border-[#f5a623] ${
+                        selectedSectionCategory === category ? 'border-[#f5a623]' : 'border-transparent'
+                      }`}
                     >
                       <Icon className="mx-auto mb-2 h-6 w-6" />
                       <p className="text-sm">{category}</p>
@@ -203,11 +339,20 @@ export function Categories() {
             <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-[#111111]">Most Popular Services</h2>
-                <button className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white">View All</button>
+                <button
+                  onClick={handleViewAllServices}
+                  className="rounded-full bg-[#111111] px-4 py-2 text-xs text-white"
+                >
+                  View All
+                </button>
               </div>
 
+              {selectedSectionCategory ? (
+                <p className="mb-4 text-sm text-[#6b7280]">Showing {selectedSectionCategory} offerings</p>
+              ) : null}
+
               <div className="grid gap-5 xl:grid-cols-2">
-                {popularServices.map((service) => (
+                {paginatedServices.map((service) => (
                   <article key={service.id} className="flex min-h-[200px] overflow-hidden rounded-2xl bg-[#1a1f2e]">
                     <div className="relative w-[42%] shrink-0">
                       <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
@@ -239,15 +384,19 @@ export function Categories() {
                         ))}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="h-4 w-4 shrink-0 rounded-full bg-[#374151]" />
-                        {['English', 'Mandarin', 'Arabic'].map((lang) => (
+                        <Globe className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                        {getDeterministicLanguages(`${service.id}-${service.vendor}`).map((lang) => (
                           <span key={lang} className="rounded-full bg-[#252d3d] px-2 py-0.5 text-[9px] text-[#d1d5db]">
                             {lang}
                           </span>
                         ))}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="h-5 w-5 shrink-0 rounded-full bg-[#374151]" />
+                        <img
+                          src={getVendorAvatarUrl(service.vendor)}
+                          alt={service.vendor}
+                          className="h-5 w-5 shrink-0 rounded-full bg-[#374151] object-cover"
+                        />
                         <span className="text-[11px] font-medium text-white">{service.vendor}</span>
                         <span className="text-[9px] text-[#6b7280]">⊙ Responds · 15 mins</span>
                       </div>
@@ -264,6 +413,8 @@ export function Categories() {
                   </article>
                 ))}
               </div>
+
+              {renderPagination()}
             </section>
           </main>
         </div>

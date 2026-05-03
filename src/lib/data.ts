@@ -19,6 +19,44 @@ export const locations = [
   { id: 'online', name: 'Online', count: 650 },
 ];
 
+export const supportedLanguages = [
+  'English',
+  'Portuguese',
+  'Shona',
+  'Arabic',
+  'Hindi',
+  'Zulu',
+  'Xhosa',
+];
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+export function getDeterministicLanguages(seed: string | number, count = 3): string[] {
+  const normalizedSeed = String(seed);
+  const pool = [...supportedLanguages];
+  const picked: string[] = [];
+  let cursor = hashSeed(normalizedSeed);
+
+  while (picked.length < Math.min(count, pool.length)) {
+    const nextIndex = cursor % pool.length;
+    picked.push(pool.splice(nextIndex, 1)[0]);
+    cursor = hashSeed(`${cursor}-${normalizedSeed}-${picked.length}`);
+  }
+
+  return picked;
+}
+
+export function getVendorAvatarUrl(vendorName: string): string {
+  const seed = encodeURIComponent(vendorName.trim() || 'vendor');
+  return `https://api.dicebear.com/8.x/initials/svg?seed=${seed}&backgroundType=gradientLinear`;
+}
+
 // Accommodation Services
 export const accommodationServices = [
   {
@@ -488,52 +526,121 @@ export const marketplaceProducts = [
     price: 150,
     currency: '₹',
     description: 'Each bottle of Mazoe Orange Crush bursts with rich orange juice flavour, delivering the signature tangy taste that\'s uniquely Mazoe.',
-    images: [
-      'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=800&auto=format&fit=crop',
-    ],
+    image: 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=800&auto=format&fit=crop',
     rating: 4.7,
     reviews: 89,
     category: 'Beverages',
+    subcategory: 'Juices',
   },
   {
     id: 1002,
     name: 'Bally House 2L',
+    vendor: 'Bally House Foods',
     price: 100,
     originalPrice: 150,
     currency: '₹',
     image: 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400&auto=format&fit=crop',
+    subcategory: 'Drinks',
   },
   {
     id: 1003,
     name: 'Ace Mealie Meal 5kg',
+    vendor: 'Ace Milling',
     price: 400,
     originalPrice: 499,
     currency: '₹',
     image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop',
+    subcategory: 'Cereals',
   },
   {
     id: 1004,
     name: 'Pfuko Maheu 250ml',
+    vendor: 'Pfuko Foods',
     price: 50,
     originalPrice: 80,
     currency: '₹',
     image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&auto=format&fit=crop',
+    subcategory: 'Drinks',
   },
   {
     id: 1005,
     name: 'Cerevita 200g',
+    vendor: 'Cerevita',
     price: 150,
     originalPrice: 250,
     currency: '₹',
     image: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=400&auto=format&fit=crop',
+    subcategory: 'Cereals',
   },
   {
     id: 1006,
     name: 'Lager 340ml',
+    vendor: 'Lager Co.',
     price: 80,
     originalPrice: 100,
     currency: '₹',
     image: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&auto=format&fit=crop',
+    subcategory: 'Drinks',
+  },
+  {
+    id: 1007,
+    name: 'Fresh Apple Pack 1kg',
+    vendor: 'Campus Fresh Mart',
+    price: 220,
+    originalPrice: 260,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&auto=format&fit=crop',
+    subcategory: 'Fruits',
+  },
+  {
+    id: 1008,
+    name: 'Banana Bunch',
+    vendor: 'Campus Fresh Mart',
+    price: 80,
+    originalPrice: 100,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400&auto=format&fit=crop',
+    subcategory: 'Fruits',
+  },
+  {
+    id: 1009,
+    name: 'Tomato Basket 1kg',
+    vendor: 'Green Basket',
+    price: 70,
+    originalPrice: 90,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400&auto=format&fit=crop',
+    subcategory: 'Vegetables',
+  },
+  {
+    id: 1010,
+    name: 'Carrot Pack 500g',
+    vendor: 'Green Basket',
+    price: 60,
+    originalPrice: 75,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1447175008436-170170753d52?w=400&auto=format&fit=crop',
+    subcategory: 'Vegetables',
+  },
+  {
+    id: 1011,
+    name: 'Plantain Chips 200g',
+    vendor: 'Snack Stop',
+    price: 90,
+    originalPrice: 120,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop',
+    subcategory: 'Snacks',
+  },
+  {
+    id: 1012,
+    name: 'Mixed Nut Snack Pack',
+    vendor: 'Snack Stop',
+    price: 140,
+    originalPrice: 170,
+    currency: '₹',
+    image: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400&auto=format&fit=crop',
+    subcategory: 'Snacks',
   },
 ];
 

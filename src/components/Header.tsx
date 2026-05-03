@@ -10,7 +10,6 @@ import {
   Mic,
   Camera,
   LogOut,
-  Settings,
   MessageSquare,
   Package,
   LayoutDashboard,
@@ -36,10 +35,14 @@ const navLinks = [
   { label: 'Help & Support', page: 'help-support' as NavigablePage },
 ];
 
+const languageOptions = ['English', 'Portuguese', 'Shona', 'Arabic', 'Hindi', 'Zulu', 'Xhosa'];
+
 export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isElevated, setIsElevated] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const { user, isAuthenticated, signOut } = useAuth();
@@ -123,11 +126,36 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
             {/* Right Actions */}
             <div className="flex items-center gap-2 lg:gap-3">
               {/* Language Selector */}
-              <button className="hidden items-center gap-1 text-sm text-slate-300 hover:text-white sm:flex">
-                <Globe className="h-4 w-4" />
-                <span>EN</span>
-                <ChevronDown className="h-3 w-3" />
-              </button>
+              <div className="relative hidden sm:block">
+                <button
+                  onClick={() => setLanguageMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-1 text-sm text-slate-300 hover:text-white"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>{selectedLanguage}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+                {languageMenuOpen ? (
+                  <div className="absolute right-0 top-8 z-10 w-40 rounded-xl border border-slate-700 bg-[#0F172A] p-1 shadow-lg">
+                    {languageOptions.map((language) => (
+                      <button
+                        key={language}
+                        onClick={() => {
+                          setSelectedLanguage(language);
+                          setLanguageMenuOpen(false);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm ${
+                          selectedLanguage === language
+                            ? 'bg-slate-800 text-white'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        {language}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
 
               {isAuthenticated ? (
                 <>
@@ -171,10 +199,6 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                           <MessageSquare className="h-4 w-4" />
                           Messages
                         </button>
-                        <button onClick={() => { navigateTo('profile'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
-                          <Settings className="h-4 w-4" />
-                          Settings
-                        </button>
                         <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#ef4444] hover:bg-[#fef2f2]">
                           <LogOut className="h-4 w-4" />
                           Logout
@@ -214,6 +238,25 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     {/* Mobile Header */}
                     <div className="flex items-center justify-between border-b border-slate-800 p-4">
                       <span className="font-bold text-white">Menu</span>
+                    </div>
+
+                    <div className="border-b border-slate-800 px-4 py-3">
+                      <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">Language</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {languageOptions.map((language) => (
+                          <button
+                            key={language}
+                            onClick={() => setSelectedLanguage(language)}
+                            className={`rounded-md px-2 py-1.5 text-xs ${
+                              selectedLanguage === language
+                                ? 'bg-slate-700 text-white'
+                                : 'bg-slate-800 text-slate-300'
+                            }`}
+                          >
+                            {language}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Mobile Search */}
