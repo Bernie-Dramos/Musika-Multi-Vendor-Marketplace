@@ -221,7 +221,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
         }`}
       >
         {/* ── TOP BAR  bg: #10131C ───────────────────────────────────────── */}
-        <div style={{ backgroundColor: '#10131C' }}>
+        <div className="bg-[#10131C]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-[56px] items-center gap-4">
 
@@ -443,7 +443,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                       <Menu className="h-5 w-5" />
                     </button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-[300px] border-slate-700 p-0" style={{ backgroundColor: '#10131C' }}>
+                  <SheetContent side="right" className="w-[300px] border-slate-700 bg-[#10131C] p-0">
                     <div className="flex h-full flex-col">
                       <div className="flex items-center border-b border-slate-800 p-4">
                         <span className="font-semibold text-white">Menu</span>
@@ -566,7 +566,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
         </div>
 
         {/* ── BOTTOM NAV BAR  bg: #08090A ────────────────────────────────── */}
-        <nav className="hidden lg:block" style={{ backgroundColor: '#08090A' }}>
+        <nav className="hidden bg-[#08090A] lg:block">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <ul className="flex h-11 items-center justify-between">
               {navLinks.map((link) => (
@@ -594,13 +594,12 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setShowLocationModal(false); }}
         >
-          <div
-            className="relative w-full max-w-sm rounded-2xl border border-slate-700 p-6 shadow-2xl"
-            style={{ backgroundColor: '#10131C' }}
-          >
+          <div className="relative w-full max-w-sm rounded-2xl border border-slate-700 bg-[#10131C] p-6 shadow-2xl">
             <button
               onClick={() => setShowLocationModal(false)}
               className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+              aria-label="Close location modal"
+              title="Close"
             >
               <X className="h-4 w-4" />
             </button>

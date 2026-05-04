@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   BrowserRouter,
@@ -16,56 +16,82 @@ import { AuthProvider } from './features/auth/context/AuthContext';
 import { AuthRoute, ProtectedRoute } from './features/auth/components/RouteGuards';
 import { getPageFromPath, pageToPath, type NavigablePage } from './lib/navigation';
 
-const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })));
-const Services = lazy(() => import('./pages/Services').then((module) => ({ default: module.Services })));
-const Categories = lazy(() => import('./pages/Categories').then((module) => ({ default: module.Categories })));
-const Marketplace = lazy(() => import('./pages/Marketplace').then((module) => ({ default: module.Marketplace })));
-const SignIn = lazy(() => import('./pages/SignIn').then((module) => ({ default: module.SignIn })));
-const SignUp = lazy(() => import('./pages/SignUp').then((module) => ({ default: module.SignUp })));
-const NotFound = lazy(() => import('./pages/NotFound').then((module) => ({ default: module.NotFound })));
+const loadHome = () => import('./pages/Home');
+const loadServices = () => import('./pages/Services');
+const loadCategories = () => import('./pages/Categories');
+const loadMarketplace = () => import('./pages/Marketplace');
+const loadSignIn = () => import('./pages/SignIn');
+const loadSignUp = () => import('./pages/SignUp');
+const loadNotFound = () => import('./pages/NotFound');
+const loadInternationalResources = () => import('./pages/InternationalResources');
+const loadInternationalResourceDetail = () => import('./pages/InternationalResourceDetail');
+const loadCommunityForum = () => import('./pages/CommunityForum');
+const loadCommunityForumNew = () => import('./pages/CommunityForumNew');
+const loadCommunityForumDetail = () => import('./pages/CommunityForumDetail');
+const loadBecomeVendor = () => import('./pages/BecomeVendor');
+const loadHelpSupport = () => import('./pages/HelpSupport');
+const loadProfile = () => import('./pages/Profile');
+const loadVendorDashboard = () => import('./pages/VendorDashboard');
+const loadAdminDashboard = () => import('./pages/AdminDashboard');
+const loadMyPosts = () => import('./pages/MyPosts');
+const loadSavedResources = () => import('./pages/SavedResources');
+const loadMyTickets = () => import('./pages/MyTickets');
+const loadForgotPassword = () => import('./pages/ForgotPassword');
+const loadServiceDetail = () => import('./pages/ServiceDetail');
+const loadProductDetail = () => import('./pages/ProductDetail');
+const loadVendorDetail = () => import('./pages/VendorDetail');
+const loadAuthCallback = () => import('./pages/AuthCallback');
+
+const Home = lazy(() => loadHome().then((module) => ({ default: module.Home })));
+const Services = lazy(() => loadServices().then((module) => ({ default: module.Services })));
+const Categories = lazy(() => loadCategories().then((module) => ({ default: module.Categories })));
+const Marketplace = lazy(() => loadMarketplace().then((module) => ({ default: module.Marketplace })));
+const SignIn = lazy(() => loadSignIn().then((module) => ({ default: module.SignIn })));
+const SignUp = lazy(() => loadSignUp().then((module) => ({ default: module.SignUp })));
+const NotFound = lazy(() => loadNotFound().then((module) => ({ default: module.NotFound })));
 const InternationalResources = lazy(() =>
-  import('./pages/InternationalResources').then((module) => ({ default: module.InternationalResources }))
+  loadInternationalResources().then((module) => ({ default: module.InternationalResources }))
 );
 const InternationalResourceDetail = lazy(() =>
-  import('./pages/InternationalResourceDetail').then((module) => ({ default: module.InternationalResourceDetail }))
+  loadInternationalResourceDetail().then((module) => ({ default: module.InternationalResourceDetail }))
 );
 const CommunityForum = lazy(() =>
-  import('./pages/CommunityForum').then((module) => ({ default: module.CommunityForum }))
+  loadCommunityForum().then((module) => ({ default: module.CommunityForum }))
 );
 const CommunityForumNew = lazy(() =>
-  import('./pages/CommunityForumNew').then((module) => ({ default: module.CommunityForumNew }))
+  loadCommunityForumNew().then((module) => ({ default: module.CommunityForumNew }))
 );
 const CommunityForumDetail = lazy(() =>
-  import('./pages/CommunityForumDetail').then((module) => ({ default: module.CommunityForumDetail }))
+  loadCommunityForumDetail().then((module) => ({ default: module.CommunityForumDetail }))
 );
-const BecomeVendor = lazy(() => import('./pages/BecomeVendor').then((module) => ({ default: module.BecomeVendor })));
-const HelpSupport = lazy(() => import('./pages/HelpSupport').then((module) => ({ default: module.HelpSupport })));
-const Profile = lazy(() => import('./pages/Profile').then((module) => ({ default: module.Profile })));
+const BecomeVendor = lazy(() => loadBecomeVendor().then((module) => ({ default: module.BecomeVendor })));
+const HelpSupport = lazy(() => loadHelpSupport().then((module) => ({ default: module.HelpSupport })));
+const Profile = lazy(() => loadProfile().then((module) => ({ default: module.Profile })));
 const VendorDashboard = lazy(() =>
-  import('./pages/VendorDashboard').then((module) => ({ default: module.VendorDashboard }))
+  loadVendorDashboard().then((module) => ({ default: module.VendorDashboard }))
 );
 const AdminDashboard = lazy(() =>
-  import('./pages/AdminDashboard').then((module) => ({ default: module.AdminDashboard }))
+  loadAdminDashboard().then((module) => ({ default: module.AdminDashboard }))
 );
-const MyPosts = lazy(() => import('./pages/MyPosts').then((module) => ({ default: module.MyPosts })));
+const MyPosts = lazy(() => loadMyPosts().then((module) => ({ default: module.MyPosts })));
 const SavedResources = lazy(() =>
-  import('./pages/SavedResources').then((module) => ({ default: module.SavedResources }))
+  loadSavedResources().then((module) => ({ default: module.SavedResources }))
 );
-const MyTickets = lazy(() => import('./pages/MyTickets').then((module) => ({ default: module.MyTickets })));
+const MyTickets = lazy(() => loadMyTickets().then((module) => ({ default: module.MyTickets })));
 const ForgotPassword = lazy(() =>
-  import('./pages/ForgotPassword').then((module) => ({ default: module.ForgotPassword }))
+  loadForgotPassword().then((module) => ({ default: module.ForgotPassword }))
 );
 const ServiceDetail = lazy(() =>
-  import('./pages/ServiceDetail').then((module) => ({ default: module.ServiceDetail }))
+  loadServiceDetail().then((module) => ({ default: module.ServiceDetail }))
 );
 const ProductDetail = lazy(() =>
-  import('./pages/ProductDetail').then((module) => ({ default: module.ProductDetail }))
+  loadProductDetail().then((module) => ({ default: module.ProductDetail }))
 );
 const VendorDetail = lazy(() =>
-  import('./pages/VendorDetail').then((module) => ({ default: module.VendorDetail }))
+  loadVendorDetail().then((module) => ({ default: module.VendorDetail }))
 );
 const AuthCallback = lazy(() =>
-  import('./pages/AuthCallback').then((module) => ({ default: module.AuthCallback }))
+  loadAuthCallback().then((module) => ({ default: module.AuthCallback }))
 );
 
 function RouteFallback() {
@@ -77,6 +103,21 @@ function RouteFallback() {
       </div>
     </div>
   );
+}
+
+function DelayedRouteFallback() {
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowFallback(true), 650);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!showFallback) {
+    return <div className="min-h-[50vh]" />;
+  }
+
+  return <RouteFallback />;
 }
 
 function AppShell() {
@@ -93,7 +134,7 @@ function AppShell() {
     <div className="min-h-screen flex flex-col bg-white">
       <Header navigateTo={navigateTo} currentPage={currentPage} />
       <main className="flex-1">
-        <Suspense fallback={<RouteFallback />}>
+        <Suspense fallback={<DelayedRouteFallback />}>
           <Routes>
             <Route path="/" element={<Home navigateTo={navigateTo} />} />
             <Route path="/services" element={<Services navigateTo={navigateTo} />} />
@@ -198,6 +239,20 @@ function AppShell() {
 }
 
 function App() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void Promise.all([
+        loadServices(),
+        loadSignIn(),
+        loadSignUp(),
+        loadBecomeVendor(),
+        loadHelpSupport(),
+      ]).catch(() => undefined);
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const queryClient = useMemo(
     () =>
       new QueryClient({

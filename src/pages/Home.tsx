@@ -39,6 +39,25 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Smartphone,
 };
 
+const featureDelayClasses = [
+  '[animation-delay:0ms]',
+  '[animation-delay:100ms]',
+  '[animation-delay:200ms]',
+  '[animation-delay:300ms]',
+] as const;
+
+const stepDelayClasses = [
+  '[animation-delay:0ms]',
+  '[animation-delay:150ms]',
+  '[animation-delay:300ms]',
+] as const;
+
+const ctaDelayClasses = [
+  '[animation-delay:0ms]',
+  '[animation-delay:100ms]',
+  '[animation-delay:200ms]',
+] as const;
+
 export function Home({ navigateTo }: HomeProps) {
   return (
     <div className="min-h-screen">
@@ -97,11 +116,11 @@ export function Home({ navigateTo }: HomeProps) {
           <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => {
               const IconComponent = iconMap[feature.icon] || ShieldCheck;
+              const delayClass = featureDelayClasses[index % featureDelayClasses.length];
               return (
                 <StaggerItem key={feature.id}>
-                  <div 
-                    className="bg-[#10131C] rounded-2xl p-8 h-full hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col items-center"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                  <div
+                    className={`bg-[#10131C] rounded-2xl p-8 h-full hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col items-center ${delayClass}`}
                   >
                     <div className="w-12 h-12 rounded-full border border-slate-700/50 bg-[#1A1D27] flex items-center justify-center mb-2">
                       <IconComponent className="w-5 h-5 text-slate-300 stroke-[1.5]" />
@@ -135,7 +154,7 @@ export function Home({ navigateTo }: HomeProps) {
           <StaggerContainer className="grid md:grid-cols-3 gap-8 lg:gap-12 mt-8">
             {howItWorks.map((step, index) => (
               <StaggerItem key={step.step}>
-                <div className="text-center" style={{ animationDelay: `${index * 150}ms` }}>
+                <div className={`text-center ${stepDelayClasses[index % stepDelayClasses.length]}`}>
                   <div className="w-8 h-8 bg-[#10131C] rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-[12px] font-bold text-white">{step.step}</span>
                   </div>
@@ -172,8 +191,7 @@ export function Home({ navigateTo }: HomeProps) {
                 ].map((item, index) => (
                   <li
                     key={index}
-                    className="flex items-center gap-3 animate-fade-in-up"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className={`flex items-center gap-3 animate-fade-in-up ${ctaDelayClasses[index % ctaDelayClasses.length]}`}
                   >
                     <span className="flex items-center justify-center flex-shrink-0">
                       <Check className="w-[14px] h-[14px] text-white stroke-[2]" />
