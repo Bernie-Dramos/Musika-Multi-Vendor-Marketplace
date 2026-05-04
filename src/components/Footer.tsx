@@ -68,7 +68,12 @@ export function Footer({ navigateTo }: FooterProps) {
         }, 100);
       }
     } else if (href.startsWith('/')) {
-      navigateTo(href.slice(1) as NavigablePage);
+      const page = resolvePage(href);
+      if (page) {
+        navigateTo(page);
+      } else {
+        navigateTo('home');
+      }
     } else {
       navigateTo('home');
     }

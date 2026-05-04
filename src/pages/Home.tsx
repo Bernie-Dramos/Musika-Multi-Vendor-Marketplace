@@ -5,7 +5,6 @@ import {
   Lock,
   PlayCircle,
   Check,
-  Search,
   Building,
   UtensilsCrossed,
   Car,

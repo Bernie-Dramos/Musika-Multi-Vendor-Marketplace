@@ -4,6 +4,8 @@ import {
   Search,
   Globe,
   Bell,
+  ShoppingCart,
+  Menu,
   ChevronDown,
   LogOut,
   MessageSquare,
@@ -15,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BrandLogo } from '@/components/BrandLogo';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
@@ -69,6 +70,10 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
   const langCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const languageMenuRef = useRef<HTMLDivElement | null>(null);
+  const languageButtonRef = useRef<HTMLButtonElement | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const { totalItems, setIsCartOpen } = useCart();
   const { user, isAuthenticated, signOut } = useAuth();
 
@@ -148,13 +153,15 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   }, []);
 
   // ── Avatar label ──────────────────────────────────────────────────────────
+  const displayName = useMemo(() => {
+    const fullName =
+      typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name.trim() : '';
+    return fullName || user?.email || 'Student';
+  }, [user?.email, user?.user_metadata]);
+
   const avatarLabel = useMemo(() => {
-    const name =
-      (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()) ||
-      user?.email ||
-      'S';
-    return name.charAt(0).toUpperCase();
-  }, [user]);
+    return displayName.charAt(0).toUpperCase();
+  }, [displayName]);
 
   const avatarSrc = useMemo(() => {
     const avatarUrl = typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url.trim() : '';
@@ -283,6 +290,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   }}
                 >
                   <button
+                    ref={languageButtonRef}
                     onClick={() => setLanguageMenuOpen((prev) => !prev)}
                     className="flex items-center gap-0.5 rounded-full px-2 py-1.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
                   >
@@ -291,7 +299,10 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     <ChevronDown className="h-3 w-3 opacity-70" />
                   </button>
                   {languageMenuOpen && (
-                    <div className="absolute right-0 top-9 z-20 w-40 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl">
+                    <div
+                      ref={languageMenuRef}
+                      className="absolute right-0 top-9 z-20 w-40 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl"
+                    >
                       {languageOptions.map((language) => (
                         <button
                           key={language}
@@ -353,6 +364,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     }}
                   >
                     <button
+                      ref={profileButtonRef}
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
                       onClick={() => setProfileMenuOpen((prev) => !prev)}
                       aria-label="User menu"
@@ -360,7 +372,10 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                       {avatarLabel}
                     </button>
                     {profileMenuOpen && (
-                      <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl">
+                      <div
+                        ref={profileMenuRef}
+                        className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl"
+                      >
                         <button
                           onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
