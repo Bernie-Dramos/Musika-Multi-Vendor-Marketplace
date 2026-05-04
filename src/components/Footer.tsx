@@ -6,6 +6,35 @@ interface FooterProps {
   navigateTo: (page: NavigablePage) => void;
 }
 
+function resolvePage(href: string): NavigablePage | null {
+  if (!href.startsWith('/')) {
+    return null;
+  }
+
+  const route = href.slice(1);
+  if (
+    route === 'services' ||
+    route === 'international-resources' ||
+    route === 'community-forum' ||
+    route === 'become-vendor' ||
+    route === 'help-support' ||
+    route === 'signup' ||
+    route === 'signin' ||
+    route === 'profile' ||
+    route === 'vendor-dashboard' ||
+    route === 'saved-resources' ||
+    route === 'my-tickets' ||
+    route === 'my-posts' ||
+    route === 'marketplace' ||
+    route === 'categories' ||
+    route === ''
+  ) {
+    return (route === '' ? 'home' : route) as NavigablePage;
+  }
+
+  return null;
+}
+
 export function Footer({ navigateTo }: FooterProps) {
   const [email, setEmail] = useState('');
 

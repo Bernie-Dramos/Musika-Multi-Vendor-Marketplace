@@ -4,8 +4,6 @@ import {
   Search,
   Globe,
   Bell,
-  ShoppingCart,
-  Menu,
   ChevronDown,
   LogOut,
   MessageSquare,
@@ -17,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
@@ -36,7 +35,7 @@ const navLinks = [
   { label: 'Help & Support', page: 'help-support' as NavigablePage },
 ];
 
-const languageOptions = ['Arabic', 'English', 'Hindi', 'Portuguese', 'Shona', 'Xhosa', 'Zulu'];
+const languageOptions = ['EN', 'AR', 'HI', 'PT', 'SN', 'XH', 'ZU'];
 
 // Filled MapPin SVG (lucide MapPin is outline; we use a filled variant inline)
 function FilledMapPin({ className }: { className?: string }) {
@@ -59,7 +58,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedLanguage, setSelectedLanguage] = useState('EN');
   const [isElevated, setIsElevated] = useState(false);
 
   // Location state
@@ -76,8 +75,35 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   // ── Scroll elevation ──────────────────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => setIsElevated(window.scrollY > 4);
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (
+        languageMenuRef.current &&
+        !languageMenuRef.current.contains(target) &&
+        languageButtonRef.current &&
+        !languageButtonRef.current.contains(target)
+      ) {
+        setLanguageMenuOpen(false);
+      }
+
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(target) &&
+        profileButtonRef.current &&
+        !profileButtonRef.current.contains(target)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    };
+
     window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    document.addEventListener('mousedown', onPointerDown);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('mousedown', onPointerDown);
+    };
   }, []);
 
   // ── Auto-detect location on mount ─────────────────────────────────────────
@@ -130,10 +156,32 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
     return name.charAt(0).toUpperCase();
   }, [user]);
 
+  const avatarSrc = useMemo(() => {
+    const avatarUrl = typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url.trim() : '';
+    if (avatarUrl) {
+      return avatarUrl;
+    }
+
+    const seed = encodeURIComponent(displayName || user?.email || 'musika-user');
+    return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}`;
+  }, [displayName, user?.email, user?.user_metadata]);
+
+  const dashboardPage = useMemo<NavigablePage>(() => {
+    const role = typeof user?.user_metadata?.role === 'string' ? user.user_metadata.role : undefined;
+    return role === 'vendor' ? 'vendor-dashboard' : 'profile';
+  }, [user?.user_metadata]);
+
   const handleLogout = async () => {
     await signOut();
     setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
     navigateTo('home');
+  };
+
+  const handleNavigate = (page: NavigablePage) => {
+    navigateTo(page);
+    setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
   };
 
   const isActive = (page: NavigablePage) => currentPage === page;

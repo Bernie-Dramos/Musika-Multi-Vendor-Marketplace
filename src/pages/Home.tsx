@@ -5,6 +5,7 @@ import {
   Lock,
   PlayCircle,
   Check,
+  Search,
   Building,
   UtensilsCrossed,
   Car,
@@ -51,15 +52,15 @@ export function Home({ navigateTo }: HomeProps) {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0F172A] leading-tight mb-6">
                 Connect with Verified Vendors on Musika
               </h1>
-              <p className="text-lg text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0">
-                Discover, trade, and thrive in the trusted global marketplace designed for international students who turn passion into profit.
+              <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-600 lg:mx-0">
+                Musika brings student-friendly shopping, verified services, and a community marketplace into one modern platform designed to help you settle in faster.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center">
                 <Button
                   className="bg-[#10131C] hover:bg-[#1E293B] text-white px-6 py-5 text-sm rounded-full font-medium"
                   onClick={() => navigateTo('services')}
                 >
-                  Get Started
+                  Explore Marketplace
                 </Button>
                 <button
                   className="group flex items-center gap-2 text-[#10131C] hover:opacity-70 font-medium text-sm transition-all"
