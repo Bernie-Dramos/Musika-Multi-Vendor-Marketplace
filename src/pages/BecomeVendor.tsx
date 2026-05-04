@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { vendorBenefits, vendorRequirements } from '@/lib/vendor';
-import { CheckCircle2, Clock, FileText, ShieldCheck, Upload } from 'lucide-react';
+import { Clock, FileText, ShieldCheck, Upload } from 'lucide-react';
 import { useUpsertVendorApplicationMutation, useVendorApplicationQuery } from '@/features/vendor/hooks/useVendorApplication';
 
 // ── Minimal standalone layout ─────────────────────────────────────────────────
@@ -154,7 +152,7 @@ function UnderReviewScreen({ firstName, userId }: { firstName: string; userId?: 
 
 // ── Main BecomeVendor component ───────────────────────────────────────────────
 
-type PageState = 'landing' | 'form' | 'success';
+type PageState = 'form' | 'success';
 
 export function BecomeVendor() {
   const navigate = useNavigate();
@@ -162,13 +160,21 @@ export function BecomeVendor() {
   const existingApplicationQuery = useVendorApplicationQuery(user?.id);
   const submitApplicationMutation = useUpsertVendorApplicationMutation(user?.id);
 
-  const [pageState, setPageState] = useState<PageState>('landing');
+  const [pageState, setPageState] = useState<PageState>('form');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Redirect already-applied users to their dashboard
+  useEffect(() => {
+    if (existingApplicationQuery.data?.status) {
+      navigate('/vendor-dashboard');
+    }
+  }, [existingApplicationQuery.data?.status, navigate]);
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     phone: '',
     legalBusinessName: '',
     businessCategory: '',
@@ -179,21 +185,12 @@ export function BecomeVendor() {
   const [businessLicenseFile, setBusinessLicenseFile] = useState<File | null>(null);
   const [governmentIdFile, setGovernmentIdFile] = useState<File | null>(null);
 
-  const handleStartOnboarding = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user) {
       navigate('/signin?next=/become-vendor');
       return;
     }
-    if (existingApplicationQuery.data?.status) {
-      navigate('/vendor-dashboard');
-      return;
-    }
-    setPageState('form');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
     if (!agreedToTerms) {
       setSubmitError('Please agree to the Terms of Service before submitting.');
       return;
@@ -206,7 +203,7 @@ export function BecomeVendor() {
         business_name: formData.legalBusinessName,
         business_type: 'individual',
         owner_name: `${formData.firstName} ${formData.lastName}`.trim(),
-        owner_email: user.email ?? '',
+        owner_email: user.email ?? formData.email,
         owner_phone: formData.phone,
         business_description: '',
         category: formData.businessCategory,
@@ -277,9 +274,14 @@ export function BecomeVendor() {
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-[#374151]">Email Address</label>
                   <input
-                    value={user?.email ?? ''}
-                    disabled
-                    className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-[#f3f4f6] px-4 text-sm text-[#6b7280]"
+                    type="email"
+                    required
+                    value={user?.email ?? formData.email}
+                    disabled={!!user}
+                    onChange={(e) => !user && setFormData({ ...formData, email: e.target.value })}
+                    className={`h-11 w-full rounded-xl border border-[#e5e7eb] px-4 text-sm placeholder:text-[#9ca3af] focus:border-[#111111] focus:outline-none focus:ring-2 focus:ring-[#111111]/10 ${
+                      user ? 'bg-[#f3f4f6] text-[#6b7280]' : 'bg-[#f9fafb] text-[#111111]'
+                    }`}
                     placeholder="julian@institution.edu"
                   />
                 </div>
@@ -436,77 +438,4 @@ export function BecomeVendor() {
       </div>
     );
   }
-
-  // ── Landing page ──────────────────────────────────────────────────────────
-  return (
-    <div className="min-h-screen bg-white">
-      <StandaloneHeader />
-
-      <main className="mx-auto max-w-6xl space-y-16 px-6 py-16 sm:px-8">
-        {/* Hero */}
-        <section className="text-center">
-          <h1 className="text-4xl font-bold text-[#111111] lg:text-5xl">Become a Vendor</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-[#6b7280]">
-            Join thousands of sellers reaching international students. Start selling on Musika today.
-          </p>
-          <Button
-            onClick={handleStartOnboarding}
-            className="mt-8 rounded-full bg-[#111111] px-8 py-3 text-white hover:bg-black"
-          >
-            Get Started
-          </Button>
-        </section>
-
-        {/* Benefits */}
-        <section>
-          <h2 className="mb-6 text-2xl font-bold text-[#111111]">Why Sell on Musika?</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {vendorBenefits.map((benefit) => (
-              <div
-                key={benefit.id}
-                className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="mb-3 text-4xl">{benefit.icon}</div>
-                <h3 className="font-semibold text-[#111111]">{benefit.title}</h3>
-                <p className="mt-1 text-sm text-[#6b7280]">{benefit.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Requirements */}
-        <section>
-          <h2 className="mb-6 text-2xl font-bold text-[#111111]">What We Require</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:max-w-4xl">
-            {vendorRequirements.map((req) => (
-              <div key={req.id} className="flex gap-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
-                <CheckCircle2
-                  className={`mt-0.5 h-5 w-5 shrink-0 ${req.required ? 'text-[#16a34a]' : 'text-[#9ca3af]'}`}
-                />
-                <div>
-                  <h4 className="text-sm font-semibold text-[#111111]">{req.title}</h4>
-                  <p className="mt-0.5 text-xs text-[#6b7280]">{req.description}</p>
-                  {req.required && <Badge className="mt-2 text-xs">Required</Badge>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="rounded-2xl bg-[#0f1523] px-8 py-12 text-center text-white">
-          <h2 className="text-2xl font-bold">Ready to Start Selling?</h2>
-          <p className="mt-2 text-[#9ca3af]">Join Musika's vendor community and reach thousands of students.</p>
-          <Button
-            onClick={handleStartOnboarding}
-            className="mt-6 rounded-full bg-white px-8 py-3 font-semibold text-[#111111] hover:bg-[#f3f4f6]"
-          >
-            Complete Onboarding
-          </Button>
-        </section>
-      </main>
-
-      <StandaloneFooter />
-    </div>
-  );
 }

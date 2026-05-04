@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Upload, Check, User, Store, ChevronDown } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Upload, Check, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import type { NavigablePage } from '@/lib/navigation';
-
-type AccountType = 'student' | 'vendor';
 
 interface SignUpProps {
   navigateTo?: (page: NavigablePage) => void;
@@ -18,7 +16,6 @@ export function SignUp({ navigateTo }: SignUpProps) {
   const navigate = useNavigate();
   const { signUp, isSupabaseReady } = useAuth();
 
-  const [accountType, setAccountType] = useState<AccountType>('student');
   const [showPassword, setShowPassword] = useState(false);
   const [step] = useState(1);
 
@@ -56,7 +53,7 @@ export function SignUp({ navigateTo }: SignUpProps) {
       university: university || undefined,
       country: country || undefined,
       marketing_consent: marketingConsent,
-      role: accountType,
+      role: 'student',
     });
 
     setIsSubmitting(false);
@@ -116,7 +113,7 @@ export function SignUp({ navigateTo }: SignUpProps) {
               Join Musika
             </h1>
             <p className="text-sm text-slate-600">
-              Create your account to start buying and selling with verified services
+              Create your account to connect with verified services
             </p>
           </div>
 
@@ -163,82 +160,6 @@ export function SignUp({ navigateTo }: SignUpProps) {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Account Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-[#0F172A] mb-3">
-                Account Type
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setAccountType('student')}
-                  className={`flex flex-col items-center gap-3 p-4 border-2 rounded-xl transition-colors ${
-                    accountType === 'student'
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      accountType === 'student' ? 'bg-emerald-500' : 'bg-slate-200'
-                    }`}
-                  >
-                    <User
-                      className={`w-6 h-6 ${
-                        accountType === 'student' ? 'text-white' : 'text-slate-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p
-                      className={`font-semibold ${
-                        accountType === 'student' ? 'text-emerald-700' : 'text-[#0F172A]'
-                      }`}
-                    >
-                      Student
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Shop for products from verified vendors
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAccountType('vendor')}
-                  className={`flex flex-col items-center gap-3 p-4 border-2 rounded-xl transition-colors ${
-                    accountType === 'vendor'
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      accountType === 'vendor' ? 'bg-emerald-500' : 'bg-slate-200'
-                    }`}
-                  >
-                    <Store
-                      className={`w-6 h-6 ${
-                        accountType === 'vendor' ? 'text-white' : 'text-slate-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p
-                      className={`font-semibold ${
-                        accountType === 'vendor' ? 'text-emerald-700' : 'text-[#0F172A]'
-                      }`}
-                    >
-                      Vendor
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Sell your products to students
-                    </p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
             {/* Personal Information */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-[#0F172A]">
@@ -252,7 +173,7 @@ export function SignUp({ navigateTo }: SignUpProps) {
                 </label>
                 <Input
                   type="email"
-                  placeholder="Lennox"
+                  placeholder="example@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full h-12 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -432,6 +353,15 @@ export function SignUp({ navigateTo }: SignUpProps) {
 
           {/* Footer */}
           <p className="text-center text-sm text-slate-600 mt-6">
+            Signing up as a vendor?{' '}
+            <Link
+              to="/become-vendor"
+              className="text-[#0F172A] hover:text-[#1E293B] font-medium underline underline-offset-2"
+            >
+              Sign up as a vendor
+            </Link>
+          </p>
+          <p className="text-center text-sm text-slate-600 mt-3">
             Already have an account?{' '}
             <button
               type="button"
