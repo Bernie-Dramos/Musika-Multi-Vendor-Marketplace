@@ -1,6 +1,4 @@
-import { Shield, Building2, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react';
 import { footerLinks } from '@/lib/data';
 import type { NavigablePage } from '@/lib/navigation';
 
@@ -9,74 +7,100 @@ interface FooterProps {
 }
 
 export function Footer({ navigateTo }: FooterProps) {
+  const [email, setEmail] = useState('');
+
+  const handleSubscribe = async () => {
+    if (!email.trim()) {
+      // eslint-disable-next-line no-alert
+      alert('Please enter an email address');
+      return;
+    }
+    try {
+      // eslint-disable-next-line no-console
+      console.log('subscribe', email);
+      // eslint-disable-next-line no-alert
+      alert('Thanks — subscription received (placeholder)');
+      setEmail('');
+    } catch {
+      // eslint-disable-next-line no-alert
+      alert('Subscription failed. Please try again.');
+    }
+  };
+
+  const handleLinkClick = (href: string) => {
+    if (href.startsWith('#') && href.length > 1) {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigateTo('home');
+        setTimeout(() => {
+          document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    } else if (href.startsWith('/')) {
+      navigateTo(href.slice(1) as NavigablePage);
+    } else {
+      navigateTo('home');
+    }
+  };
+
   return (
-    <footer className="bg-[#0f1523] text-white">
-      {/* Newsletter Section */}
-      <div className="border-b border-[#1a1f2e]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Stay Updated</h3>
-              <p className="text-sm text-[#9ca3af]">
-                Get the latest products, services, tips and resources delivered to your inbox
-              </p>
-            </div>
-            <div className="flex gap-2 w-full md:w-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email address"
-                className="w-full md:w-80 bg-[#1a1f2e] border-[#374151] text-white placeholder:text-[#6b7280] focus:ring-[#111111]"
-              />
-              <Button className="bg-[#111111] hover:bg-black text-white px-6">
-                Subscribe
-              </Button>
-            </div>
+    <footer className="bg-[#10131C] text-slate-300">
+      <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8">
+        
+        {/* ── Newsletter strip ── */}
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between mb-16">
+          <div>
+            <h3 className="text-[18px] font-semibold text-white">Stay Updated</h3>
+            <p className="mt-1.5 text-[13px] text-[#888888] leading-relaxed">
+              Get the latest products, services , tips and resources
+              <br className="hidden sm:block" /> delivered to your inbox
+            </p>
+          </div>
+          <div className="flex w-full items-center gap-3 md:w-auto mt-2 md:mt-0">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
+              placeholder="Enter your email address"
+              className="h-[38px] w-full rounded-full border border-[#2E3343] bg-[#1E212B]/60 px-5 text-[13px] text-white placeholder:text-[#666] focus:outline-none focus:border-slate-500 md:w-[340px]"
+            />
+            <button
+              onClick={handleSubscribe}
+              className="h-[38px] shrink-0 rounded-full bg-[#2A2E3D] px-5 text-[13px] font-medium text-slate-300 hover:bg-[#3B4054] transition-colors"
+            >
+              Subscribe
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand Column */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <button 
+        {/* ── Main columns ── */}
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 pb-16 border-b border-[#222]">
+          
+          {/* Column 1 – Brand */}
+          <div>
+            <button
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 mb-4"
+              className="mb-4 flex items-center gap-2 text-left"
             >
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">M</span>
-              </div>
-              <div className="text-left">
-                <span className="font-bold text-lg">Musika</span>
-                <span className="text-xs text-[#9ca3af] block -mt-1">International Student</span>
-              </div>
+              <img src="/images/Musika logo.svg" alt="Musika logo" className="h-7 w-auto" />
             </button>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
-                <Shield className="w-4 h-4 text-[#f5a623]" />
-                <span>100% Verified Services</span>
-              </li>
-              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
-                <Building2 className="w-4 h-4 text-[#f5a623]" />
-                <span>25+ University Partnerships</span>
-              </li>
-              <li className="flex items-center gap-2 text-sm text-[#d1d5db]">
-                <Users className="w-4 h-4 text-[#f5a623]" />
-                <span>50 000+ Users</span>
-              </li>
-            </ul>
+            <p className="mt-3 text-[13px] leading-snug text-[#888888]">
+              International Student<br />Multivendor Marketplace
+            </p>
           </div>
 
-          {/* For Students */}
+          {/* Column 2 – For Students */}
           <div>
-            <h4 className="font-semibold mb-4">For Students</h4>
-            <ul className="space-y-2">
+            <h4 className="mb-4 text-[15px] font-medium text-white">For Students</h4>
+            <ul className="space-y-3">
               {footerLinks.forStudents.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
+                    onClick={() => handleLinkClick(link.href)}
+                    className="text-[13px] text-[#888888] transition-colors hover:text-white"
                   >
                     {link.label}
                   </button>
@@ -85,15 +109,15 @@ export function Footer({ navigateTo }: FooterProps) {
             </ul>
           </div>
 
-          {/* For Vendors */}
+          {/* Column 3 – For Vendors */}
           <div>
-            <h4 className="font-semibold mb-4">For Vendors</h4>
-            <ul className="space-y-2">
+            <h4 className="mb-4 text-[15px] font-medium text-white">For Vendors</h4>
+            <ul className="space-y-3">
               {footerLinks.forVendors.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
+                    onClick={() => handleLinkClick(link.href)}
+                    className="text-[13px] text-[#888888] transition-colors hover:text-white"
                   >
                     {link.label}
                   </button>
@@ -102,15 +126,15 @@ export function Footer({ navigateTo }: FooterProps) {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Column 4 – Support */}
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
-            <ul className="space-y-2">
+            <h4 className="mb-4 text-[15px] font-medium text-white">Support</h4>
+            <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
                   <button
-                    onClick={() => link.href.startsWith('/') ? navigateTo(link.href.slice(1) as NavigablePage) : null}
-                    className="text-sm text-[#d1d5db] hover:text-white transition-colors text-left"
+                    onClick={() => handleLinkClick(link.href)}
+                    className="text-[13px] text-[#888888] transition-colors hover:text-white"
                   >
                     {link.label}
                   </button>
@@ -119,23 +143,19 @@ export function Footer({ navigateTo }: FooterProps) {
             </ul>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-[#1a1f2e]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-[#9ca3af]">
-              © 2025 Musika. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-[#9ca3af]">
-              <button className="hover:text-white transition-colors">
+        {/* ── Bottom bar ── */}
+        <div className="py-6">
+          <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
+            <p className="text-[12px] text-[#888888]">© 2025 Musika. All rights reserved.</p>
+            <div className="flex items-center gap-8">
+              <button className="text-[12px] text-[#888888] transition-colors hover:text-white">
                 Privacy Policy
               </button>
-              <button className="hover:text-white transition-colors">
+              <button className="text-[12px] text-[#888888] transition-colors hover:text-white">
                 Terms of Service
               </button>
-              <button className="hover:text-white transition-colors">
+              <button className="text-[12px] text-[#888888] transition-colors hover:text-white">
                 Cookie Policy
               </button>
             </div>

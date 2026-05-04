@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  MapPin,
   Globe,
   Bell,
   ShoppingCart,
   Menu,
   ChevronDown,
-  Mic,
-  Camera,
   LogOut,
   MessageSquare,
   Package,
   LayoutDashboard,
+  User,
+  X,
+  Locate,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -37,29 +38,95 @@ const navLinks = [
 
 const languageOptions = ['Arabic', 'English', 'Hindi', 'Portuguese', 'Shona', 'Xhosa', 'Zulu'];
 
+// Filled MapPin SVG (lucide MapPin is outline; we use a filled variant inline)
+function FilledMapPin({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+    >
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
+    </svg>
+  );
+}
+
 export function Header({ navigateTo, currentPage }: HeaderProps) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isElevated, setIsElevated] = useState(false);
+
+  // Location state
+  const [locationLabel, setLocationLabel] = useState('Detecting…');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [manualLocation, setManualLocation] = useState('');
+
   const langCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { totalItems, setIsCartOpen } = useCart();
   const { user, isAuthenticated, signOut } = useAuth();
 
+  // ── Scroll elevation ──────────────────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => setIsElevated(window.scrollY > 4);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // ── Auto-detect location on mount ─────────────────────────────────────────
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationLabel('Location unavailable');
+      return;
+    }
+    setLocationLoading(true);
+    setLocationLabel('Detecting…');
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
+          );
+          const data = await res.json();
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county ||
+            'Unknown';
+          const country = data.address?.country_code?.toUpperCase() ?? '';
+          setLocationLabel(`${city}${country ? ', ' + country : ''}`);
+        } catch {
+          setLocationLabel('Location found');
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      () => {
+        setLocationLabel('Pune, India'); // graceful fallback
+        setLocationLoading(false);
+      },
+      { timeout: 8000 }
+    );
+  };
+
+  useEffect(() => {
+    detectLocation();
+  }, []);
+
+  // ── Avatar label ──────────────────────────────────────────────────────────
   const avatarLabel = useMemo(() => {
     const name =
       (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()) ||
       user?.email ||
-      'Student';
+      'S';
     return name.charAt(0).toUpperCase();
   }, [user]);
 
@@ -71,295 +138,382 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
   const isActive = (page: NavigablePage) => currentPage === page;
 
+  // ── Search submit ─────────────────────────────────────────────────────────
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!searchQuery.trim()) return;
+    navigate(`/services?q=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  // ── Notification count (0 when unauthenticated; no hardcoded dummy) ───────
+  // Real notifications would be fetched from Supabase; for now 0 when not signed in.
+  const notificationCount = isAuthenticated ? 0 : 0;
+
+  // ── Manual location save ──────────────────────────────────────────────────
+  const handleSaveLocation = () => {
+    if (manualLocation.trim()) {
+      setLocationLabel(manualLocation.trim());
+    }
+    setManualLocation('');
+    setShowLocationModal(false);
+  };
+
   return (
-    <header className={`sticky top-0 z-50 w-full bg-[#0F172A] transition-all duration-150 ${isElevated ? 'shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : ''}`}>
-      <div className="border-b border-slate-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-2 lg:h-16">
-            {/* Logo */}
-            <button 
-              onClick={() => navigateTo('home')}
-              className="flex flex-shrink-0 items-center gap-2"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-                <span className="text-white font-bold text-sm">M</span>
-              </div>
-              <div className="hidden text-left sm:block">
-                <span className="text-lg font-bold text-white">Musika</span>
-                <span className="-mt-1 block text-xs text-slate-400">International Student</span>
-              </div>
-            </button>
+    <>
+      <header
+        className={`sticky top-0 z-50 w-full transition-all duration-150 ${
+          isElevated ? 'shadow-[0_2px_8px_rgba(0,0,0,0.5)]' : ''
+        }`}
+      >
+        {/* ── TOP BAR  bg: #10131C ───────────────────────────────────────── */}
+        <div style={{ backgroundColor: '#10131C' }}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-[56px] items-center gap-4">
 
-            {/* Location Selector - Desktop */}
-            <div className="ml-4 hidden items-center gap-2 text-sm text-slate-300 lg:flex">
-              <MapPin className="h-4 w-4 text-emerald-400" />
-              <span>Pune, India</span>
-              <button className="text-xs text-emerald-400 hover:text-emerald-300">
-                Update Location
-              </button>
-            </div>
-
-            {/* Search Bar - Desktop */}
-            <div className="mx-3 hidden max-w-xl flex-1 md:flex lg:mx-8">
-              <div
-                className={`relative w-full transition-all duration-150 ${
-                  isSearchFocused ? 'rounded-lg ring-2 ring-emerald-500' : ''
-                }`}
+              {/* Logo — no "Musika" text, just icon + tagline */}
+              <button
+                onClick={() => navigateTo('home')}
+                className="flex shrink-0 items-center gap-2 text-left"
               >
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search for Accommodation, Transportation..."
-                  className="h-10 w-full rounded-lg border border-slate-700 bg-slate-800/50 pl-10 pr-20 text-sm text-white placeholder:text-slate-500 focus:outline-none"
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                />
-                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-slate-300">
-                  <button className="rounded-full p-1.5 hover:bg-slate-700 hover:text-white" aria-label="Voice search">
-                    <Mic className="h-4 w-4" />
-                  </button>
-                  <button className="rounded-full p-1.5 hover:bg-slate-700 hover:text-white" aria-label="Image search">
-                    <Camera className="h-4 w-4" />
-                  </button>
+                <img src="/images/Musika logo.svg" alt="Musika logo" className="h-7 w-auto" />
+                <div className="hidden flex-col text-left sm:flex">
+                  <span className="text-[9px] leading-tight text-slate-400">
+                    International Student<br />Multivendor Marketplace
+                  </span>
                 </div>
-              </div>
-            </div>
+              </button>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-2 lg:gap-3">
-              {/* Language Selector */}
-              <div
-                className="relative hidden sm:block"
-                onMouseEnter={() => { if (langCloseTimer.current) clearTimeout(langCloseTimer.current); }}
-                onMouseLeave={() => { langCloseTimer.current = setTimeout(() => setLanguageMenuOpen(false), 80); }}
+              {/* Location – desktop */}
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="ml-1 hidden shrink-0 items-start gap-1 lg:flex group"
+                title="Update your location"
               >
-                <button
-                  onClick={() => setLanguageMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-1 text-sm text-slate-300 hover:text-white"
+                <FilledMapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
+                <div className="leading-none text-left">
+                  <p className="text-[12px] font-medium text-slate-200 group-hover:text-white transition-colors">
+                    {locationLoading ? 'Detecting…' : locationLabel}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">
+                    Update Location
+                  </p>
+                </div>
+              </button>
+
+              {/* Search bar */}
+              <form onSubmit={handleSearch} className="mx-4 hidden flex-1 md:flex">
+                <div
+                  className={`relative w-full transition-all duration-150 ${
+                    isSearchFocused ? 'ring-2 ring-emerald-500/60 rounded-full' : ''
+                  }`}
                 >
-                  <Globe className="h-4 w-4" />
-                  <span>{selectedLanguage}</span>
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-                {languageMenuOpen ? (
-                  <div className="absolute right-0 top-8 z-10 w-40 rounded-xl border border-slate-700 bg-[#0F172A] p-1 shadow-lg">
-                    {languageOptions.map((language) => (
-                      <button
-                        key={language}
-                        onClick={() => {
-                          setSelectedLanguage(language);
-                          setLanguageMenuOpen(false);
-                        }}
-                        className={`w-full rounded-lg px-3 py-2 text-left text-sm ${
-                          selectedLanguage === language
-                            ? 'bg-slate-800 text-white'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                        }`}
-                      >
-                        {language}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for Accommodation, Transportation..."
+                    className="h-9 w-full rounded-full border border-slate-600/50 bg-[#1E2235] pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none"
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                  />
+                </div>
+              </form>
 
-              {isAuthenticated ? (
-                <>
+              {/* Right actions */}
+              <div className="ml-auto flex items-center gap-1">
+
+                {/* Language selector */}
+                <div
+                  className="relative hidden sm:block"
+                  onMouseEnter={() => {
+                    if (langCloseTimer.current) clearTimeout(langCloseTimer.current);
+                    setLanguageMenuOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    langCloseTimer.current = setTimeout(() => setLanguageMenuOpen(false), 120);
+                  }}
+                >
                   <button
-                    className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => navigateTo('my-tickets')}
-                    aria-label="Notifications"
+                    onClick={() => setLanguageMenuOpen((prev) => !prev)}
+                    className="flex items-center gap-0.5 rounded-full px-2 py-1.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
                   >
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute right-1 top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#111111] px-1 text-[10px] text-white">
-                      3
-                    </span>
+                    <Globe className="h-4 w-4" />
+                    <span className="ml-1 text-xs font-medium">{selectedLanguage.slice(0, 2).toUpperCase()}</span>
+                    <ChevronDown className="h-3 w-3 opacity-70" />
                   </button>
+                  {languageMenuOpen && (
+                    <div className="absolute right-0 top-9 z-20 w-40 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl">
+                      {languageOptions.map((language) => (
+                        <button
+                          key={language}
+                          onClick={() => {
+                            setSelectedLanguage(language);
+                            setLanguageMenuOpen(false);
+                          }}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm ${
+                            selectedLanguage === language
+                              ? 'bg-slate-700/80 text-white'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {language}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                  <button
-                    className="relative rounded-full p-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => setIsCartOpen(true)}
-                    aria-label="Shopping cart"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#111111] px-1.5 text-[10px] font-semibold text-white">
+                {/* Notification bell — real count, no dummy */}
+                <button
+                  className="relative rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                  onClick={() => navigateTo('my-tickets')}
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notificationCount > 0 && (
+                    <span className="absolute right-0.5 top-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-semibold text-white">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Cart */}
+                <button
+                  className="relative rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                  onClick={() => setIsCartOpen(true)}
+                  aria-label="Shopping cart"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {totalItems > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white">
                       {totalItems > 99 ? '99+' : totalItems}
                     </span>
-                  </button>
+                  )}
+                </button>
 
+                {/* User avatar / icon */}
+                {isAuthenticated ? (
                   <div
                     className="relative hidden sm:block"
-                    onMouseEnter={() => { if (profileCloseTimer.current) clearTimeout(profileCloseTimer.current); }}
-                    onMouseLeave={() => { profileCloseTimer.current = setTimeout(() => setProfileMenuOpen(false), 80); }}
+                    onMouseEnter={() => {
+                      if (profileCloseTimer.current) clearTimeout(profileCloseTimer.current);
+                      setProfileMenuOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      profileCloseTimer.current = setTimeout(() => setProfileMenuOpen(false), 120);
+                    }}
                   >
                     <button
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#111111] text-sm font-semibold text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
                       onClick={() => setProfileMenuOpen((prev) => !prev)}
                       aria-label="User menu"
                     >
                       {avatarLabel}
                     </button>
-                    {profileMenuOpen ? (
-                      <div className="absolute right-0 top-11 w-52 rounded-xl border border-slate-700 bg-[#0F172A] p-1 shadow-lg">
-                        <button onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
+                    {profileMenuOpen && (
+                      <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl">
+                        <button
+                          onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                        >
                           <LayoutDashboard className="h-4 w-4" />
                           My Dashboard
                         </button>
-                        <button onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
+                        <button
+                          onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                        >
                           <Package className="h-4 w-4" />
                           My Orders
                         </button>
-                        <button onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
+                        <button
+                          onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                        >
                           <MessageSquare className="h-4 w-4" />
                           Messages
                         </button>
-                        <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#ef4444] hover:bg-[#fef2f2]">
+                        <button
+                          onClick={handleLogout}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                        >
                           <LogOut className="h-4 w-4" />
                           Logout
                         </button>
                       </div>
-                    ) : null}
+                    )}
                   </div>
-                </>
-              ) : (
-                <div className="hidden items-center gap-2 lg:flex">
-                  <Button
-                    variant="ghost"
-                    className="rounded-full text-white hover:bg-slate-800 hover:text-white"
+                ) : (
+                  <button
+                    className="hidden rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors sm:flex"
                     onClick={() => navigateTo('signin')}
+                    aria-label="Sign in"
+                  >
+                    <User className="h-5 w-5" />
+                  </button>
+                )}
+
+                {/* Login + SignUp — pill/circular style, no underline */}
+                <div className="hidden items-center gap-3 lg:flex">
+                  <button
+                    onClick={() => navigateTo('signin')}
+                    className="rounded-full border border-transparent bg-[#1E2235] px-5 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-slate-800"
                   >
                     Login
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-emerald-500 text-emerald-400 hover:bg-emerald-500/10"
+                  </button>
+                  <button
                     onClick={() => navigateTo('signup')}
+                    className="rounded-full border border-slate-600 bg-transparent px-5 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-slate-800"
                   >
                     SignUp
-                  </Button>
-                </div>
-              )}
-
-              {/* Mobile Menu Button */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <button className="p-2 text-slate-300 hover:text-white lg:hidden" aria-label="Open navigation menu">
-                    <Menu className="h-6 w-6" />
                   </button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] border-slate-800 bg-[#0F172A] p-0">
-                  <div className="flex flex-col h-full">
-                    {/* Mobile Header */}
-                    <div className="flex items-center justify-between border-b border-slate-800 p-4">
-                      <span className="font-bold text-white">Menu</span>
-                    </div>
+                </div>
 
-                    <div className="border-b border-slate-800 px-4 py-3">
-                      <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">Language</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {languageOptions.map((language) => (
-                          <button
-                            key={language}
-                            onClick={() => setSelectedLanguage(language)}
-                            className={`rounded-md px-2 py-1.5 text-xs ${
-                              selectedLanguage === language
-                                ? 'bg-slate-700 text-white'
-                                : 'bg-slate-800 text-slate-300'
-                            }`}
-                          >
-                            {language}
-                          </button>
-                        ))}
+                {/* Mobile hamburger */}
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <button
+                      className="rounded-full p-2 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors lg:hidden"
+                      aria-label="Open navigation menu"
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[300px] border-slate-700 p-0" style={{ backgroundColor: '#10131C' }}>
+                    <div className="flex h-full flex-col">
+                      <div className="flex items-center border-b border-slate-800 p-4">
+                        <span className="font-semibold text-white">Menu</span>
                       </div>
-                    </div>
 
-                    {/* Mobile Search */}
-                    <div className="p-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          placeholder="Search..."
-                          className="h-10 w-full rounded-lg border border-slate-700 bg-slate-800 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                      </div>
-                    </div>
+                      {/* Mobile search */}
+                      <form
+                        onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false); }}
+                        className="border-b border-slate-800 p-4"
+                      >
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search..."
+                            className="h-10 w-full rounded-full border border-slate-700 bg-[#1E2235] pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                      </form>
 
-                    {/* Mobile Nav Links */}
-                    <nav className="flex-1 px-4">
-                      <ul className="space-y-1">
-                        {navLinks.map((link) => (
-                          <li key={link.label}>
+                      {/* Mobile location */}
+                      <button
+                        onClick={() => { setShowLocationModal(true); setMobileMenuOpen(false); }}
+                        className="flex items-start gap-2 border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800/40"
+                      >
+                        <FilledMapPin className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-200">{locationLabel}</p>
+                          <p className="text-xs text-slate-500">Tap to update location</p>
+                        </div>
+                      </button>
+
+                      {/* Language */}
+                      <div className="border-b border-slate-800 px-4 py-3">
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Language</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {languageOptions.map((language) => (
                             <button
-                              className="block w-full rounded-lg px-4 py-3 text-left text-slate-300 transition-all duration-150 hover:bg-slate-800 hover:text-white"
-                              onClick={() => {
-                                navigateTo(link.page);
-                                setMobileMenuOpen(false);
-                              }}
+                              key={language}
+                              onClick={() => setSelectedLanguage(language)}
+                              className={`rounded-full px-2 py-1.5 text-xs font-medium transition-colors ${
+                                selectedLanguage === language
+                                  ? 'bg-slate-600 text-white'
+                                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                              }`}
                             >
-                              {link.label}
+                              {language}
                             </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
+                          ))}
+                        </div>
+                      </div>
 
-                    {/* Mobile Auth */}
-                    <div className="space-y-2 border-t border-slate-800 p-4">
-                      {isAuthenticated ? (
-                        <>
-                          <Button className="w-full bg-[#111111] text-white hover:bg-black" onClick={() => { navigateTo('vendor-dashboard'); setMobileMenuOpen(false); }}>
-                            My Dashboard
-                          </Button>
-                          <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-800" onClick={handleLogout}>
-                            Logout
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            className="w-full border-slate-600 text-white hover:bg-slate-800"
-                            onClick={() => {
-                              navigateTo('signin');
-                              setMobileMenuOpen(false);
-                            }}
-                          >
-                            Login
-                          </Button>
-                          <Button
-                            className="w-full bg-[#111111] text-white hover:bg-black"
-                            onClick={() => {
-                              navigateTo('signup');
-                              setMobileMenuOpen(false);
-                            }}
-                          >
-                            SignUp
-                          </Button>
-                        </>
-                      )}
+                      {/* Nav links */}
+                      <nav className="flex-1 overflow-y-auto px-4 py-2">
+                        <ul className="space-y-0.5">
+                          {navLinks.map((link) => (
+                            <li key={link.label}>
+                              <button
+                                className={`block w-full rounded-full px-4 py-2.5 text-left text-sm transition-colors ${
+                                  isActive(link.page)
+                                    ? 'bg-slate-700 font-medium text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                }`}
+                                onClick={() => {
+                                  navigateTo(link.page);
+                                  setMobileMenuOpen(false);
+                                }}
+                              >
+                                {link.label}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </nav>
+
+                      {/* Mobile auth */}
+                      <div className="space-y-2 border-t border-slate-800 p-4">
+                        {isAuthenticated ? (
+                          <>
+                            <Button
+                              className="w-full rounded-full bg-slate-700 text-white hover:bg-slate-600"
+                              onClick={() => { navigateTo('vendor-dashboard'); setMobileMenuOpen(false); }}
+                            >
+                              My Dashboard
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="w-full rounded-full border-slate-600 text-white hover:bg-slate-800"
+                              onClick={handleLogout}
+                            >
+                              Logout
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="w-full rounded-full border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white"
+                              onClick={() => { navigateTo('signin'); setMobileMenuOpen(false); }}
+                            >
+                              Login
+                            </Button>
+                            <Button
+                              className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
+                              onClick={() => { navigateTo('signup'); setMobileMenuOpen(false); }}
+                            >
+                              SignUp
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation Bar - Desktop */}
-      <nav className="hidden border-t border-slate-800 bg-[#0F172A] lg:block">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-12 items-center justify-between">
-            <ul className="flex items-center gap-8">
+        {/* ── BOTTOM NAV BAR  bg: #08090A ────────────────────────────────── */}
+        <nav className="hidden lg:block" style={{ backgroundColor: '#08090A' }}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <ul className="flex h-11 items-center justify-between">
               {navLinks.map((link) => (
                 <li key={link.label}>
                   <button
                     onClick={() => navigateTo(link.page)}
-                    className={`border-b-2 pb-[13px] text-sm transition-all duration-150 ${
+                    className={`relative px-1 py-3 text-sm transition-colors duration-150 ${
                       isActive(link.page)
-                        ? 'border-white font-medium text-white'
-                        : 'border-transparent text-slate-400 hover:text-white'
+                        ? 'font-semibold text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-white'
+                        : 'font-normal text-slate-400 hover:text-white'
                     }`}
                   >
                     {link.label}
@@ -368,8 +522,66 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
               ))}
             </ul>
           </div>
+        </nav>
+      </header>
+
+      {/* ── Location Modal ──────────────────────────────────────────────────── */}
+      {showLocationModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowLocationModal(false); }}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl border border-slate-700 p-6 shadow-2xl"
+            style={{ backgroundColor: '#10131C' }}
+          >
+            <button
+              onClick={() => setShowLocationModal(false)}
+              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <h2 className="mb-1 text-base font-semibold text-white">Your Location</h2>
+            <p className="mb-4 text-xs text-slate-400">
+              We use your location to show relevant services nearby.
+            </p>
+
+            {/* Auto-detect */}
+            <button
+              onClick={() => { detectLocation(); setShowLocationModal(false); }}
+              className="mb-4 flex w-full items-center gap-3 rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-800"
+            >
+              <Locate className="h-4 w-4 text-emerald-400" />
+              <span>Detect my location automatically</span>
+            </button>
+
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex-1 border-t border-slate-700" />
+              <span className="text-xs text-slate-500">or enter manually</span>
+              <div className="flex-1 border-t border-slate-700" />
+            </div>
+
+            <input
+              type="text"
+              value={manualLocation}
+              onChange={(e) => setManualLocation(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveLocation(); }}
+              placeholder="e.g. Mumbai, India"
+              className="mt-2 h-10 w-full rounded-xl border border-slate-600 bg-[#1E2235] px-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              autoFocus
+            />
+
+            <button
+              onClick={handleSaveLocation}
+              disabled={!manualLocation.trim()}
+              className="mt-3 h-10 w-full rounded-xl bg-emerald-600 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
+            >
+              Save Location
+            </button>
+          </div>
         </div>
-      </nav>
-    </header>
+      )}
+    </>
   );
 }
