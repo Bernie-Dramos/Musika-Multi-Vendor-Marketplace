@@ -114,6 +114,7 @@ function AppShell() {
               }
             />
             <Route path="/community-forum/:slug" element={<CommunityForumDetail />} />
+            <Route path="/become-vendor" element={<BecomeVendor />} />
             <Route path="/help-support" element={<HelpSupport />} />
 
             <Route
@@ -217,14 +218,7 @@ function App() {
         <AuthProvider>
           <CartProvider>
             <ErrorBoundary>
-              <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  {/* Standalone layout — no global Header/Footer */}
-                  <Route path="/become-vendor" element={<BecomeVendor />} />
-                  {/* Main app shell */}
-                  <Route path="*" element={<AppShell />} />
-                </Routes>
-              </Suspense>
+              <AppShell />
             </ErrorBoundary>
           </CartProvider>
         </AuthProvider>
