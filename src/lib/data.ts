@@ -887,23 +887,23 @@ export const howItWorks = [
 export const footerLinks = {
   forStudents: [
     { label: 'Browse Services', href: '/services' },
-    { label: 'How it works', href: '#' },
+    { label: 'How it works', href: '#how-it-works' },
     { label: 'Buyer Protection', href: '#' },
     { label: 'Payment Methods', href: '#' },
     { label: 'Shipping Info', href: '#' },
   ],
   forVendors: [
-    { label: 'Start Selling', href: '#' },
+    { label: 'Start Selling', href: '/become-vendor' },
     { label: 'Vendor Guidelines', href: '#' },
     { label: 'Verification Process', href: '#' },
     { label: 'Seller Tools', href: '#' },
     { label: 'Success Stories', href: '#' },
   ],
   support: [
-    { label: 'Help Center', href: '#' },
+    { label: 'Help Center', href: '/help-support' },
     { label: 'Contact Us', href: '#' },
     { label: 'Safety Guidelines', href: '#' },
     { label: 'Report an Issue', href: '#' },
-    { label: 'Community Forum', href: '#' },
+    { label: 'Community Forum', href: '/community-forum' },
   ],
 };

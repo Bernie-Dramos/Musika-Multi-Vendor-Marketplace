@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Building,
   Car,
@@ -63,15 +63,24 @@ const sectionCategoryToDataCategory: Record<string, string> = {
 
 export function Services({ navigateTo }: ServicesProps) {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') ?? '');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [wishlisted, setWishlisted] = useState<number[]>([]);
   const [showAllVendors, setShowAllVendors] = useState(false);
   const [vendorPage, setVendorPage] = useState(1);
-  const [forceServiceResults, setForceServiceResults] = useState(false);
+  const [forceServiceResults, setForceServiceResults] = useState(() => Boolean(searchParams.get('q')));
   const [featuredPage, setFeaturedPage] = useState(1);
   const [resultsPage, setResultsPage] = useState(1);
+
+  // Sync URL ?q= param into local state when navigating from global search
+  useEffect(() => {
+    const q = searchParams.get('q') ?? '';
+    setSearchTerm(q);
+    if (q) setForceServiceResults(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const { user } = useAuth();
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Guest';
   const displayEmail = user?.email ?? '';
