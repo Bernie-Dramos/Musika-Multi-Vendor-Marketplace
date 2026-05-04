@@ -17,9 +17,12 @@ export function SignUp({ navigateTo }: SignUpProps) {
   const { signUp, isSupabaseReady } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [step] = useState(1);
+  const [step, setStep] = useState(1);
 
   // Form fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [university, setUniversity] = useState('');
   const [country, setCountry] = useState('');
@@ -30,7 +33,6 @@ export function SignUp({ navigateTo }: SignUpProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +51,10 @@ export function SignUp({ navigateTo }: SignUpProps) {
     setIsSubmitting(true);
 
     const { error } = await signUp(email, password, {
-      full_name: undefined,
+      full_name: `${firstName} ${lastName}`.trim() || undefined,
       university: university || undefined,
       country: country || undefined,
+      phone: phone || undefined,
       marketing_consent: marketingConsent,
       role: 'student',
     });
@@ -63,8 +66,8 @@ export function SignUp({ navigateTo }: SignUpProps) {
       return;
     }
 
-    // Supabase sends a confirmation email; show a success screen
-    setEmailSent(true);
+    // Supabase sends a confirmation email; advance to Step 2
+    setStep(2);
   };
 
   const handleNavigateToSignIn = () => {
@@ -87,25 +90,130 @@ export function SignUp({ navigateTo }: SignUpProps) {
       <AnimatedSection className="max-w-lg mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-fade-in-up">
 
-          {/* Email-sent confirmation screen */}
-          {emailSent ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-                <Check className="w-8 h-8 text-emerald-600" />
+          {/* Step 3 — Complete */}
+          {step === 3 ? (
+            <div className="py-6 space-y-6">
+              {/* Step indicator */}
+              <div className="flex items-center justify-center gap-4 mb-2">
+                {[{ num: 1, label: 'Account Setup' }, { num: 2, label: 'Verification' }, { num: 3, label: 'Complete' }].map((s, index) => (
+                  <div key={s.num} className="flex items-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-[#0F172A] text-white">
+                        {s.num < 3 ? <Check className="w-4 h-4" /> : s.num}
+                      </div>
+                      <span className="text-xs text-slate-500 mt-1">{s.label}</span>
+                    </div>
+                    {index < 2 && <div className="w-12 h-px bg-[#0F172A] mx-2 mb-5" />}
+                  </div>
+                ))}
               </div>
-              <h2 className="text-2xl font-bold text-[#0F172A]">Check your email</h2>
-              <p className="text-slate-600 text-sm max-w-sm mx-auto">
-                We've sent a confirmation link to <strong>{email}</strong>. Click the link to verify your account and get started.
-              </p>
+
+              <div className="text-center space-y-4 pt-2">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                  <Check className="w-8 h-8 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0F172A]">
+                    You're all set{firstName ? `, ${firstName}` : ''}!
+                  </h2>
+                  <p className="text-slate-600 text-sm mt-2 max-w-sm mx-auto">
+                    Your account is being activated. Here's what happens next:
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                <p className="text-sm font-semibold text-[#0F172A]">What happens next?</p>
+                {[
+                  'Your activation email has been sent to ' + email,
+                  'Click the link in that email to confirm your address',
+                  'Sign in and start exploring verified student services',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                    </div>
+                    <p className="text-sm text-slate-600">{item}</p>
+                  </div>
+                ))}
+              </div>
+
               <Button
                 type="button"
                 onClick={handleNavigateToSignIn}
-                className="bg-[#0F172A] hover:bg-[#1E293B] text-white"
+                className="w-full h-12 bg-[#0F172A] hover:bg-[#1E293B] text-white font-semibold"
               >
-                Back to Sign In
+                Go to Sign In
               </Button>
             </div>
+
+          ) : step === 2 ? (
+            /* Step 2 — Verification */
+            <div className="py-4 space-y-6">
+              {/* Step indicator */}
+              <div className="flex items-center justify-center gap-4 mb-2">
+                {[{ num: 1, label: 'Account Setup' }, { num: 2, label: 'Verification' }, { num: 3, label: 'Complete' }].map((s, index) => (
+                  <div key={s.num} className="flex items-center">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                        s.num <= 2 ? 'bg-[#0F172A] text-white' : 'bg-slate-200 text-slate-500'
+                      }`}>
+                        {s.num === 1 ? <Check className="w-4 h-4" /> : s.num}
+                      </div>
+                      <span className="text-xs text-slate-500 mt-1">{s.label}</span>
+                    </div>
+                    {index < 2 && <div className={`w-12 h-px mx-2 mb-5 ${s.num === 1 ? 'bg-[#0F172A]' : 'bg-slate-300'}`} />}
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center space-y-3">
+                <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
+                  <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#0F172A]">Verify your email</h2>
+                  <p className="text-slate-600 text-sm mt-1">
+                    A verification link was sent to <strong>{email}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Application summary */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Application Summary</p>
+                {[
+                  { label: 'Name', value: `${firstName} ${lastName}`.trim() },
+                  { label: 'Email', value: email },
+                  { label: 'University', value: university },
+                  { label: 'Country', value: country },
+                ].map(({ label, value }) => value ? (
+                  <div key={label} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">{label}</span>
+                    <span className="font-medium text-[#0F172A] text-right max-w-[60%] truncate">{value}</span>
+                  </div>
+                ) : null)}
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => setStep(3)}
+                className="w-full h-12 bg-[#0F172A] hover:bg-[#1E293B] text-white font-semibold"
+              >
+                I've verified my email →
+              </Button>
+              <p className="text-center text-sm text-slate-500">
+                Didn't receive the email?{' '}
+                <button type="button" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                  Resend
+                </button>
+              </p>
+            </div>
+
           ) : (
+            /* Step 1 — Form */
             <>
           {/* Header */}
           <div className="text-center mb-8">
@@ -165,6 +273,51 @@ export function SignUp({ navigateTo }: SignUpProps) {
               <h3 className="text-sm font-medium text-[#0F172A]">
                 Personal Information
               </h3>
+
+              {/* First Name / Last Name */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-slate-600 mb-2">
+                    First Name<span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Alex"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full h-12 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-2">
+                    Last Name<span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Johnson"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full h-12 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">
+                  Phone Number<span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full h-12 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
               {/* Email */}
               <div>

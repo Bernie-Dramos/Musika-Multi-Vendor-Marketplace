@@ -5,37 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Clock, FileText, ShieldCheck, Upload } from 'lucide-react';
 import { useUpsertVendorApplicationMutation, useVendorApplicationQuery } from '@/features/vendor/hooks/useVendorApplication';
 
-// ── Minimal standalone layout ─────────────────────────────────────────────────
-
-function StandaloneHeader() {
-  return (
-    <header className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-4 sm:px-10">
-      <Link to="/" className="flex flex-col leading-none">
-        <span className="text-xl font-bold text-[#111111]">Musika</span>
-        <span className="text-[9px] uppercase tracking-[1px] text-[#9ca3af]">International Student Multivendor Marketplace</span>
-      </Link>
-      <Link to="/signin" className="text-sm font-semibold text-[#111111] underline underline-offset-2">
-        Sign In
-      </Link>
-    </header>
-  );
-}
-
-function StandaloneFooter() {
-  return (
-    <footer className="mt-16 border-t border-[#e5e7eb] px-6 py-6 sm:px-10">
-      <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-        <p className="text-xs text-[#9ca3af]">© 2025 Musika. All rights reserved.</p>
-        <div className="flex gap-6 text-xs text-[#6b7280]">
-          <Link to="/help-support" className="hover:text-[#111111]">Terms of Service</Link>
-          <Link to="/help-support" className="hover:text-[#111111]">Privacy Policy</Link>
-          <Link to="/help-support" className="hover:text-[#111111]">Vendor Support</Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 // ── File upload zone ──────────────────────────────────────────────────────────
 
 function FileUploadZone({
@@ -81,10 +50,7 @@ function UnderReviewScreen({ firstName, userId }: { firstName: string; userId?: 
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#f7f7f9]">
-      <StandaloneHeader />
-
-      <main className="mx-auto flex max-w-4xl flex-col items-center gap-10 px-6 py-16 sm:flex-row sm:items-start sm:px-10">
+    <main className="mx-auto flex max-w-4xl flex-col items-center gap-10 px-6 py-16 sm:flex-row sm:items-start sm:px-10">
         {/* Left: decorative image / status card */}
         <div className="relative w-full max-w-[340px] shrink-0">
           <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-[#e8eaf0]">
@@ -144,9 +110,6 @@ function UnderReviewScreen({ firstName, userId }: { firstName: string; userId?: 
           </div>
         </div>
       </main>
-
-      <StandaloneFooter />
-    </div>
   );
 }
 
@@ -228,10 +191,7 @@ export function BecomeVendor() {
   // ── Application Form ──────────────────────────────────────────────────────
   if (pageState === 'form') {
     return (
-      <div className="min-h-screen bg-white">
-        <StandaloneHeader />
-
-        <main className="mx-auto max-w-xl px-6 py-12 sm:px-8">
+      <main className="mx-auto max-w-xl px-6 py-12 sm:px-8">
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold tracking-tight text-[#111111]">Partner with Musika</h1>
             <p className="mt-3 text-[#6b7280]">
@@ -432,10 +392,7 @@ export function BecomeVendor() {
               </p>
             </div>
           </form>
-        </main>
-
-        <StandaloneFooter />
-      </div>
+      </main>
     );
   }
 }
