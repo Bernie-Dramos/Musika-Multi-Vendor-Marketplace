@@ -8,3 +8,6 @@ dist
 
 # Supabase local CLI temp state
 supabase/.temp
+
+# Local Netlify folder
+.netlify
