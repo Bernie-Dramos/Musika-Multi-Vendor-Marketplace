@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ProfileRow, VendorConversationRow, VendorMessageRow } from '@/lib/database.types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -12,6 +13,24 @@ export interface MessageWithSender extends VendorMessageRow {
 }
 
 export function useMessagingConversationsQuery(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!userId || !isSupabaseConfigured || !supabase) return;
+    const channel = supabase
+      .channel(`vendor-convs-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `student_id=eq.${userId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['vendor-conversations', userId] });
+        void queryClient.invalidateQueries({ queryKey: ['unread-message-count', userId] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `vendor_id=eq.${userId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['vendor-conversations', userId] });
+        void queryClient.invalidateQueries({ queryKey: ['unread-message-count', userId] });
+      })
+      .subscribe();
+    return () => { void supabase!.removeChannel(channel); };
+  }, [userId, queryClient]);
+
   return useQuery({
     queryKey: ['vendor-conversations', userId],
     queryFn: async () => {
@@ -40,6 +59,19 @@ export function useMessagingConversationsQuery(userId: string | undefined) {
 }
 
 export function useConversationMessagesQuery(conversationId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!conversationId || !isSupabaseConfigured || !supabase) return;
+    const channel = supabase
+      .channel(`vendor-msgs-${conversationId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_messages', filter: `conversation_id=eq.${conversationId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['vendor-messages', conversationId] });
+      })
+      .subscribe();
+    return () => { void supabase!.removeChannel(channel); };
+  }, [conversationId, queryClient]);
+
   return useQuery({
     queryKey: ['vendor-messages', conversationId],
     queryFn: async () => {
@@ -238,6 +270,22 @@ export function useMarkConversationReadMutation(userId: string | undefined) {
 }
 
 export function useAdminConversationOverviewQuery(enabled: boolean) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!enabled || !isSupabaseConfigured || !supabase) return;
+    const channel = supabase
+      .channel('admin-vendor-convs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations' }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['admin-vendor-conversations'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_messages' }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['admin-vendor-conversations'] });
+      })
+      .subscribe();
+    return () => { void supabase!.removeChannel(channel); };
+  }, [enabled, queryClient]);
+
   return useQuery({
     queryKey: ['admin-vendor-conversations'],
     queryFn: async () => {
@@ -261,5 +309,53 @@ export function useAdminConversationOverviewQuery(enabled: boolean) {
       return (data ?? []) as ConversationWithParticipants[];
     },
     enabled,
+  });
+}
+
+export function useUnreadMessageCountQuery(
+  userId: string | undefined,
+  role: ProfileRow['role'] | undefined,
+) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!userId || !isSupabaseConfigured || !supabase) return;
+    const channel = supabase
+      .channel(`unread-count-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `student_id=eq.${userId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['unread-message-count', userId] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `vendor_id=eq.${userId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['unread-message-count', userId] });
+      })
+      .subscribe();
+    return () => { void supabase!.removeChannel(channel); };
+  }, [userId, queryClient]);
+
+  return useQuery({
+    queryKey: ['unread-message-count', userId],
+    queryFn: async () => {
+      if (!userId || !role || !isSupabaseConfigured || !supabase || role === 'admin') {
+        return 0;
+      }
+
+      const unreadField = role === 'student' ? 'student_unread_count' : 'vendor_unread_count';
+      const filterField = role === 'student' ? 'student_id' : 'vendor_id';
+
+      const { data, error } = await supabase
+        .from('vendor_conversations')
+        .select(unreadField)
+        .eq(filterField, userId)
+        .gt(unreadField, 0);
+
+      if (error) return 0;
+
+      return (data ?? []).reduce(
+        (sum: number, row: Record<string, unknown>) => sum + ((row[unreadField] as number) ?? 0),
+        0,
+      );
+    },
+    enabled: Boolean(userId && role && role !== 'admin'),
+    staleTime: 30_000,
   });
 }

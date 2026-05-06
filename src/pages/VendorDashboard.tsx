@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Bell,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useUnreadMessageCountQuery } from '@/features/messaging/hooks/useMessaging';
 
 // ── Shared sidebar user card ─────────────────────────────────────────────────
 
@@ -509,6 +511,9 @@ function VendorCreateListing() {
 
 function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl?: string }) {
   const [activeNav, setActiveNav] = useState('Dashboard');
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const unreadCount = useUnreadMessageCountQuery(user?.id, profile?.role).data ?? 0;
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -521,13 +526,24 @@ function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl
             {vendorNavItems.map(({ label, icon: Icon }) => (
               <button
                 key={label}
-                onClick={() => setActiveNav(label)}
+                onClick={() => {
+                  if (label === 'Messages') {
+                    navigate('/messages');
+                  } else {
+                    setActiveNav(label);
+                  }
+                }}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-150 ${
                   activeNav === label ? 'bg-[#1a1f2e] text-white' : 'text-[#9ca3af] hover:bg-[#1a1f2e] hover:text-[#e5e7eb]'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {label}
+                {label === 'Messages' && unreadCount > 0 && (
+                  <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -592,9 +608,14 @@ function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl
           <Package className="h-4 w-4" />
           Orders
         </button>
-        <button onClick={() => setActiveNav('Messages')} className={`flex flex-col items-center text-xs ${activeNav === 'Messages' ? 'text-[#111111]' : 'text-[#6b7280]'}`}>
+        <button onClick={() => navigate('/messages')} className="relative flex flex-col items-center text-xs text-[#6b7280]">
           <MessageSquare className="h-4 w-4" />
           Messages
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-0.5 text-[8px] font-bold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       </nav>
     </div>

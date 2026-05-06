@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useProfileQuery, useUpdateProfileMutation } from '@/features/profile/hooks/useProfile';
+import { useUnreadMessageCountQuery } from '@/features/messaging/hooks/useMessaging';
 import { PageSectionContainer, PageHeroHeader, PageContentCard } from '@/components/PageScaffold';
 import { PageErrorState, PageLoadingState } from '@/components/QueryStates';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,10 @@ import { Input } from '@/components/ui/input';
 
 export function Profile() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, profile: authProfile } = useAuth();
   const profileQuery = useProfileQuery(user?.id);
   const updateProfileMutation = useUpdateProfileMutation(user?.id);
+  const unreadCount = useUnreadMessageCountQuery(user?.id, profileQuery.data?.role).data ?? 0;
 
   const [draftProfile, setDraftProfile] = useState<{
     full_name: string;
@@ -19,6 +21,11 @@ export function Profile() {
     country: string;
   } | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Redirect admins and vendors to their own dashboards — this page is students-only
+  // (placed after hooks to satisfy Rules of Hooks)
+  if (authProfile?.role === 'admin') return <Navigate to="/admin-dashboard" replace />;
+  if (authProfile?.role === 'vendor') return <Navigate to="/vendor-dashboard" replace />;
 
   const profileValues = draftProfile ?? {
     full_name: profileQuery.data?.full_name ?? '',
@@ -161,6 +168,11 @@ export function Profile() {
             </Button>
             <Button variant="outline" className="w-full border-slate-300" onClick={() => navigate('/messages')}>
               Open Message Inbox
+              {unreadCount > 0 && (
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Button>
             <Button variant="destructive" className="w-full" onClick={() => void handleSignOut()}>
               Sign Out

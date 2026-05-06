@@ -27,13 +27,16 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 export function AuthRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, profile } = useAuth();
 
   if (isLoading) {
     return <GuardLoading />;
   }
 
   if (isAuthenticated) {
+    const role = profile?.role;
+    if (role === 'admin') return <Navigate to="/admin-dashboard" replace />;
+    if (role === 'vendor') return <Navigate to="/vendor-dashboard" replace />;
     return <Navigate to="/profile" replace />;
   }
 

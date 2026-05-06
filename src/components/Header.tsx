@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useUnreadMessageCountQuery } from '@/features/messaging/hooks/useMessaging';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
 
 type CurrentPage = AppPage;
@@ -76,6 +77,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const { totalItems, setIsCartOpen } = useCart();
   const { user, profile, isAuthenticated, signOut } = useAuth();
+  const unreadMessageCount = useUnreadMessageCountQuery(user?.id, profile?.role).data ?? 0;
 
   // ── Scroll elevation ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -165,7 +167,9 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
   const dashboardPage = useMemo<NavigablePage>(() => {
     const role = profile?.role;
-    return role === 'vendor' ? 'vendor-dashboard' : 'profile';
+    if (role === 'admin') return 'admin-dashboard';
+    if (role === 'vendor') return 'vendor-dashboard';
+    return 'profile';
   }, [profile?.role]);
 
   const handleLogout = async () => {
@@ -323,12 +327,17 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
 
                 {isAuthenticated ? (
                   <button
-                    className="rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                    className="relative rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
                     onClick={() => navigateTo('messages-inbox')}
                     aria-label="Open message inbox"
                     title={profile?.role === 'vendor' ? 'Open vendor inbox' : 'Open student inbox'}
                   >
                     <MessageSquare className="h-5 w-5" />
+                    {unreadMessageCount > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white">
+                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                      </span>
+                    )}
                   </button>
                 ) : null}
 
@@ -412,7 +421,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   </button>
                 )}
 
-                {/* Login + SignUp — pill/circular style, no underline */}
+                {/* Login + SignUp — pill/circular style, no underline — only when not signed in */}
+                {!isAuthenticated && (
                 <div className="hidden items-center gap-3 lg:flex">
                   <button
                     onClick={() => navigateTo('signin')}
@@ -427,6 +437,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     SignUp
                   </button>
                 </div>
+                )}
 
                 {/* Mobile hamburger */}
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
