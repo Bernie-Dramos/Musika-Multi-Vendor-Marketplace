@@ -193,7 +193,7 @@ export async function fetchSupportTickets(
     .range((page - 1) * pageSize, page * pageSize - 1);
 
   if (filter && filter !== 'all') {
-    query = query.eq('status', filter);
+    query = query.eq('status', filter as 'closed' | 'open' | 'in_progress' | 'waiting_customer' | 'resolved');
   }
 
   const { data, count, error } = await query;

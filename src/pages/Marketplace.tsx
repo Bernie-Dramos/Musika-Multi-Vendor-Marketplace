@@ -49,6 +49,7 @@ export function Marketplace() {
       image: product.image,
       vendor: product.vendor ?? 'Various Vendors',
       category: product.subcategory ?? 'Marketplace',
+      type: 'product',
     });
   };
 

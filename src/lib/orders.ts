@@ -53,11 +53,12 @@ export async function placeOrder(
     throw new Error('Supabase is not configured.');
   }
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('orders')
     .insert({
       user_id: userId,
-      items: items as unknown as Record<string, unknown>[],
+      items: items,
       subtotal,
       shipping,
       delivery_address: deliveryAddress ?? null,
@@ -67,7 +68,7 @@ export async function placeOrder(
     .single();
 
   if (error) throw error;
-  return data.id as string;
+  return (data as { id: string }).id;
 }
 
 export async function fetchMyOrders(
@@ -80,7 +81,8 @@ export async function fetchMyOrders(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error, count } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error, count } = await (supabase as any)
     .from('orders')
     .select('*', { count: 'exact' })
     .eq('user_id', userId)
@@ -94,7 +96,8 @@ export async function fetchMyOrders(
 export async function fetchOrderById(id: string): Promise<PlacedOrder | null> {
   if (!isSupabaseConfigured || !supabase) return null;
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('orders')
     .select('*')
     .eq('id', id)

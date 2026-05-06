@@ -127,8 +127,6 @@ export function MessagesInbox() {
     );
   }
 
-  const isMessagingRole = Boolean(messagingRole);
-
   const startConversation = async () => {
     if (!messagingRole || !selectedPartnerId) {
       return;

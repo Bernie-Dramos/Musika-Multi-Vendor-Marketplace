@@ -254,10 +254,9 @@ const recentVendorOrders = [
 const initialTags = ['Shona', 'Vegan', 'Cultural'];
 
 function VendorDashboardOverview({
-  displayName,
   setActiveNav,
 }: {
-  displayName: string;
+  displayName?: string;
   setActiveNav: (nav: string) => void;
 }) {
   return (
@@ -274,7 +273,7 @@ function VendorDashboardOverview({
 
       {/* Stat Cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {vendorStats.map(({ label, value, change, positive, icon: Icon }) => (
+        {vendorStats.map(({ label, value, change, positive }) => (
           <div key={label} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
             <p className="text-sm text-[#6b7280]">{label}</p>
             <p className="mt-2 text-2xl font-bold text-[#111111]">{value}</p>
