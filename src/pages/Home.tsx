@@ -70,7 +70,7 @@ export function Home({ navigateTo }: HomeProps) {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0F172A] leading-tight mb-6">
                 Connect with Verified Vendors on Musika
               </h1>
-              <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-600 lg:mx-0">
+              <p className="mx-auto mt-6 mb-6 max-w-xl text-lg leading-8 text-slate-600 lg:mx-0">
                 Musika brings student-friendly shopping, verified services, and a community marketplace into one modern platform designed to help you settle in faster.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center">

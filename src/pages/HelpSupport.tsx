@@ -112,35 +112,37 @@ export function HelpSupport() {
 
         {/* FAQ Tab */}
         {activeTab === 'faq' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar */}
-            <PageFilterSidebar title="Categories">
-              <div className="space-y-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      selectedCategory === cat.id
-                        ? 'bg-emerald-600 text-white font-medium'
-                        : 'text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{cat.label}</span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded ${selectedCategory === cat.id ? 'bg-white/20' : 'bg-slate-200'}`}
-                      >
-                        {cat.count}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </PageFilterSidebar>
+            <div className="w-full lg:w-[260px] lg:flex-shrink-0">
+              <PageFilterSidebar title="Categories">
+                <div className="space-y-2">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 border border-transparent ${
+                        selectedCategory === cat.id
+                          ? 'bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] border-[rgba(255,255,255,0.15)] text-white font-medium'
+                          : 'text-slate-400 hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.10)] hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{cat.label}</span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded ${selectedCategory === cat.id ? 'bg-white/20' : 'bg-slate-200'}`}
+                        >
+                          {cat.count}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </PageFilterSidebar>
+            </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="flex-1 min-w-0 space-y-6">
               {/* Search */}
               <div className="relative">
                 <Input
@@ -253,7 +255,7 @@ export function HelpSupport() {
 
         {/* Submit Tab */}
         {activeTab === 'submit' && (
-          <PageContentCard className="space-y-6 max-w-2xl">
+          <PageContentCard className="space-y-6 max-w-2xl mx-auto">
             {user ? (
               <>
                 <h2 className="text-xl font-bold text-[#0F172A]">Contact Support</h2>

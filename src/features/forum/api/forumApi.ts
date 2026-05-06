@@ -4,7 +4,6 @@ import {
   getForumPostBySlug,
   getForumPostReplies,
   getTrendingForumPosts,
-  getUnansweredForumPosts,
   getMyForumPosts,
   type ForumPost,
   type ForumReply,
@@ -52,24 +51,7 @@ export async function fetchTrendingForumPosts(): Promise<ForumPost[]> {
   return mapPostsWithProfiles(data ?? []);
 }
 
-export async function fetchUnansweredForumPosts(): Promise<ForumPost[]> {
-  if (!isSupabaseConfigured || !supabase) {
-    await delay(120);
-    return getUnansweredForumPosts();
-  }
 
-  const { data, error } = await supabase
-    .from('forum_posts')
-    .select('*')
-    .eq('is_answered', false)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw new Error(error.message || 'Failed to load unanswered forum posts');
-  }
-
-  return mapPostsWithProfiles(data ?? []);
-}
 
 export async function fetchMyForumPosts(authorId: string): Promise<ForumPost[]> {
   if (!isSupabaseConfigured || !supabase) {

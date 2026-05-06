@@ -100,7 +100,11 @@ export function Services({ navigateTo }: ServicesProps) {
       const textMatch =
         searchTerm.trim().length === 0 ||
         service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description.toLowerCase().includes(searchTerm.toLowerCase());
+        service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.tags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          searchTerm.toLowerCase().includes(tag.toLowerCase())
+        );
       return categoryMatch && locationMatch && textMatch;
     });
   }, [searchTerm, selectedCategories, selectedLocations]);
@@ -608,15 +612,29 @@ export function Services({ navigateTo }: ServicesProps) {
                 <section className="mt-10">
                   <h2 className="text-lg font-bold text-[#111111]">Recommended For You</h2>
                   <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-                    {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map((item) => (
-                      <button
-                        key={item}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111111] px-5 py-2.5 text-sm text-white"
-                      >
-                        {item}
-                        <Search className="h-3 w-3" />
-                      </button>
-                    ))}
+                    {['Food Delivery', 'Transportation', 'Barbershop', 'Health & Wellness', 'Electrical Gadgets'].map((item) => {
+                      const isActive = searchTerm === item;
+                      return (
+                        <button
+                          key={item}
+                          onClick={() => {
+                            if (isActive) {
+                              handleSearchChange('');
+                            } else {
+                              handleSearchChange(item);
+                            }
+                          }}
+                          className={`inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm transition-all duration-200 ${
+                            isActive
+                              ? 'bg-[#f5a623] text-white shadow-md'
+                              : 'bg-[#111111] text-white hover:bg-[#222222]'
+                          }`}
+                        >
+                          {item}
+                          <Search className={`h-3 w-3 ${isActive ? 'text-white' : 'text-[#9ca3af]'}`} />
+                        </button>
+                      );
+                    })}
                   </div>
                 </section>
 
