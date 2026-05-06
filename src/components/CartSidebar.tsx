@@ -1,6 +1,8 @@
 import { X, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function CartSidebar() {
   const { 
@@ -12,6 +14,17 @@ export function CartSidebar() {
     totalItems, 
     totalPrice 
   } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    if (!isAuthenticated) {
+      navigate('/signin', { state: { from: '/checkout' } });
+    } else {
+      navigate('/checkout');
+    }
+  };
 
   if (!isCartOpen) return null;
 
@@ -143,7 +156,10 @@ export function CartSidebar() {
             </div>
             
             {/* Actions */}
-            <Button className="w-full bg-[#0F172A] hover:bg-[#1E293B] py-6 text-base font-semibold">
+            <Button
+              className="w-full bg-[#0F172A] hover:bg-[#1E293B] py-6 text-base font-semibold"
+              onClick={handleCheckout}
+            >
               Proceed to Checkout
             </Button>
             <Button 

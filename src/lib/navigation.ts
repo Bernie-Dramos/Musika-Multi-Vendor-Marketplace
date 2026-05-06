@@ -15,6 +15,8 @@ export type AppPage =
   | 'my-posts'
   | 'saved-resources'
   | 'my-tickets'
+  | 'messages-inbox'
+  | 'admin-messages'
   | 'notfound';
 
 export type NavigablePage = Exclude<AppPage, 'notfound'>;
@@ -36,6 +38,8 @@ export const pageToPath: Record<NavigablePage, string> = {
   'my-posts': '/my-posts',
   'saved-resources': '/saved-resources',
   'my-tickets': '/my-tickets',
+  'messages-inbox': '/messages',
+  'admin-messages': '/admin-messages',
 };
 
 const knownPathToPage: Record<string, NavigablePage> = {
@@ -55,6 +59,8 @@ const knownPathToPage: Record<string, NavigablePage> = {
   '/my-posts': 'my-posts',
   '/saved-resources': 'saved-resources',
   '/my-tickets': 'my-tickets',
+  '/messages': 'messages-inbox',
+  '/admin-messages': 'admin-messages',
 };
 
 export const getPageFromPath = (pathname: string): AppPage => {

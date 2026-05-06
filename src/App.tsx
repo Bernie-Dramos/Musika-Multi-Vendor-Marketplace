@@ -13,7 +13,7 @@ import { CartSidebar } from './components/CartSidebar';
 import { CartProvider } from './hooks/useCart';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './features/auth/context/AuthContext';
-import { AuthRoute, ProtectedRoute } from './features/auth/components/RouteGuards';
+import { AdminRoute, AuthRoute, ProtectedRoute, VendorRoute } from './features/auth/components/RouteGuards';
 import { getPageFromPath, pageToPath, type NavigablePage } from './lib/navigation';
 
 const loadHome = () => import('./pages/Home');
@@ -41,6 +41,11 @@ const loadServiceDetail = () => import('./pages/ServiceDetail');
 const loadProductDetail = () => import('./pages/ProductDetail');
 const loadVendorDetail = () => import('./pages/VendorDetail');
 const loadAuthCallback = () => import('./pages/AuthCallback');
+const loadMessagesInbox = () => import('./pages/MessagesInbox');
+const loadAdminMessagesOverview = () => import('./pages/AdminMessagesOverview');
+const loadCheckout = () => import('./pages/Checkout');
+const loadOrderConfirmation = () => import('./pages/OrderConfirmation');
+const loadMyOrders = () => import('./pages/MyOrders');
 
 const Home = lazy(() => loadHome().then((module) => ({ default: module.Home })));
 const Services = lazy(() => loadServices().then((module) => ({ default: module.Services })));
@@ -93,6 +98,17 @@ const VendorDetail = lazy(() =>
 const AuthCallback = lazy(() =>
   loadAuthCallback().then((module) => ({ default: module.AuthCallback }))
 );
+const MessagesInbox = lazy(() =>
+  loadMessagesInbox().then((module) => ({ default: module.MessagesInbox }))
+);
+const AdminMessagesOverview = lazy(() =>
+  loadAdminMessagesOverview().then((module) => ({ default: module.AdminMessagesOverview }))
+);
+const Checkout = lazy(() => loadCheckout().then((module) => ({ default: module.Checkout })));
+const OrderConfirmation = lazy(() =>
+  loadOrderConfirmation().then((module) => ({ default: module.OrderConfirmation }))
+);
+const MyOrders = lazy(() => loadMyOrders().then((module) => ({ default: module.MyOrders })));
 
 function RouteFallback() {
   return (
@@ -124,6 +140,9 @@ function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPage = getPageFromPath(location.pathname);
+  const isDashboardRoute =
+    location.pathname.startsWith('/vendor-dashboard') ||
+    location.pathname.startsWith('/admin-dashboard');
 
   const navigateTo = (page: NavigablePage) => {
     navigate(pageToPath[page]);
@@ -132,7 +151,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header navigateTo={navigateTo} currentPage={currentPage} />
+      {!isDashboardRoute ? <Header navigateTo={navigateTo} currentPage={currentPage} /> : null}
       <main className="flex-1">
         <Suspense fallback={<DelayedRouteFallback />}>
           <Routes>
@@ -186,17 +205,17 @@ function AppShell() {
             <Route
               path="/vendor-dashboard"
               element={
-                <ProtectedRoute>
+                <VendorRoute>
                   <VendorDashboard />
-                </ProtectedRoute>
+                </VendorRoute>
               }
             />
             <Route
               path="/admin-dashboard"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <AdminDashboard />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route
@@ -223,17 +242,58 @@ function AppShell() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <MessagesInbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-messages"
+              element={
+                <AdminRoute>
+                  <AdminMessagesOverview />
+                </AdminRoute>
+              }
+            />
 
             <Route path="/forgot-password" element={<ForgotPassword />} />
             {/* Auth callback: handles email confirmation, password recovery, magic link */}
             <Route path="/auth/callback" element={<AuthCallback />} />
 
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-confirmation"
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-orders"
+              element={
+                <ProtectedRoute>
+                  <MyOrders />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<NotFound navigateTo={navigateTo} />} />
           </Routes>
         </Suspense>
       </main>
-      <Footer navigateTo={navigateTo} />
-      <CartSidebar />
+      {!isDashboardRoute ? <Footer navigateTo={navigateTo} /> : null}
+      {!isDashboardRoute ? <CartSidebar /> : null}
     </div>
   );
 }

@@ -10,12 +10,15 @@ import {
 } from 'react';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { ProfileRow } from '@/lib/database.types';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: ProfileRow | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isSupabaseReady: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string, metadata?: { full_name?: string; university?: string; country?: string; phone?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }) => Promise<{ error: AuthError | null }>;
@@ -29,7 +32,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(supabase));
+
+  // Fetch profile row whenever user changes
+  useEffect(() => {
+    if (!supabase || !user) {
+      setProfile(null);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        setProfile(data ?? null);
+      });
+  }, [user]);
 
   useEffect(() => {
     const supabaseClient = supabase;
@@ -123,8 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       session,
+      profile,
       isLoading,
       isAuthenticated: Boolean(user),
+      isAdmin: profile?.role === 'admin',
       isSupabaseReady: isSupabaseConfigured,
       signIn,
       signUp,
@@ -132,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPassword,
       updatePassword,
     }),
-    [user, session, isLoading, signIn, signUp, signOut, resetPassword, updatePassword]
+    [user, session, profile, isLoading, signIn, signUp, signOut, resetPassword, updatePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

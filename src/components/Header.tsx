@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useUnreadMessageCountQuery } from '@/features/messaging/hooks/useMessaging';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
 import { translateText } from '@/lib/api-client';
 
@@ -76,7 +77,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileButtonRef = useRef<HTMLButtonElement | null>(null);
   const { totalItems, setIsCartOpen } = useCart();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, profile, isAuthenticated, signOut } = useAuth();
+  const unreadMessageCount = useUnreadMessageCountQuery(user?.id, profile?.role).data ?? 0;
 
   // ── Scroll elevation ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -241,32 +243,18 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   }, [user?.email, user?.user_metadata]);
 
 
-  const avatarSrc = useMemo(() => {
-    const avatarUrl = typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url.trim() : '';
-    if (avatarUrl) {
-      return avatarUrl;
-    }
-
-    const seed = encodeURIComponent(displayName || user?.email || 'musika-user');
-    return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}`;
-  }, [displayName, user?.email, user?.user_metadata]);
-
   const dashboardPage = useMemo<NavigablePage>(() => {
-    const role = typeof user?.user_metadata?.role === 'string' ? user.user_metadata.role : undefined;
-    return role === 'vendor' ? 'vendor-dashboard' : 'profile';
-  }, [user?.user_metadata]);
+    const role = profile?.role;
+    if (role === 'admin') return 'admin-dashboard';
+    if (role === 'vendor') return 'vendor-dashboard';
+    return 'profile';
+  }, [profile?.role]);
 
   const handleLogout = async () => {
     await signOut();
     setProfileMenuOpen(false);
     setMobileMenuOpen(false);
     navigateTo('home');
-  };
-
-  const handleNavigate = (page: NavigablePage) => {
-    navigateTo(page);
-    setMobileMenuOpen(false);
-    setProfileMenuOpen(false);
   };
 
   const isActive = (page: NavigablePage) => currentPage === page;
@@ -415,6 +403,22 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   )}
                 </button>
 
+                {isAuthenticated ? (
+                  <button
+                    className="relative rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                    onClick={() => navigateTo('messages-inbox')}
+                    aria-label="Open message inbox"
+                    title={profile?.role === 'vendor' ? 'Open vendor inbox' : 'Open student inbox'}
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    {unreadMessageCount > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white">
+                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                      </span>
+                    )}
+                  </button>
+                ) : null}
+
                 {/* Cart */}
                 <button
                   className="relative rounded-full p-1.5 text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
@@ -473,7 +477,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <MessageSquare className="h-4 w-4" />
-                          Messages
+                          Open Inbox
                         </button>
                         <button
                           onClick={handleLogout}
@@ -495,7 +499,8 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   </button>
                 )}
 
-                {/* Login + SignUp — pill/circular style, no underline */}
+                {/* Login + SignUp — pill/circular style, no underline — only when not signed in */}
+                {!isAuthenticated && (
                 <div className="hidden items-center gap-3 lg:flex">
                   <button
                     onClick={() => navigateTo('signin')}
@@ -510,6 +515,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     SignUp
                   </button>
                 </div>
+                )}
 
                 {/* Mobile hamburger */}
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -605,6 +611,18 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                               onClick={() => handleNavigate(dashboardPage)}
                             >
                               My Dashboard
+                            </Button>
+                            <Button
+                              className="w-full rounded-full bg-slate-700 text-white hover:bg-slate-600"
+                              onClick={() => { navigate('/my-orders'); setMobileMenuOpen(false); }}
+                            >
+                              My Orders
+                            </Button>
+                            <Button
+                              className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
+                              onClick={() => { navigateTo('messages-inbox'); setMobileMenuOpen(false); }}
+                            >
+                              Open Inbox
                             </Button>
                             <Button
                               variant="outline"
