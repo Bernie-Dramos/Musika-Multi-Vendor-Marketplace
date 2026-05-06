@@ -36,6 +36,7 @@ function getOtherParticipant(conversation: ConversationWithParticipants, userId:
 export function MessagesInbox() {
   const { user, profile } = useAuth();
   const [searchParams] = useSearchParams();
+  const vendorHint = searchParams.get('vendor');
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState('');
@@ -71,7 +72,6 @@ export function MessagesInbox() {
     Boolean(vendorHint) &&
     messagingRole === 'student' &&
     !partnersQuery.isLoading &&
-    partners.length >= 0 &&
     !matchedHintPartner;
 
   useEffect(() => {
@@ -84,7 +84,6 @@ export function MessagesInbox() {
     }
   }, [conversations, selectedConversationId]);
 
-  const vendorHint = searchParams.get('vendor');
   useEffect(() => {
     if (!vendorHint || !partners.length || !profile || profile.role !== 'student') {
       return;
