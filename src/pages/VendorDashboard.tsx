@@ -274,7 +274,7 @@ function VendorDashboardOverview({
 
       {/* Stat Cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {vendorStats.map(({ label, value, change, positive }) => (
+        {vendorStats.map(({ label, value, change, positive, icon: Icon }) => (
           <div key={label} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
             <div className="flex items-start justify-between">
               <div>

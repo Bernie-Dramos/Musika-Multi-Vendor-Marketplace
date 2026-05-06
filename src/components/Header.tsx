@@ -279,6 +279,18 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
     setShowLocationModal(false);
   };
 
+  // ── Avatar source ─────────────────────────────────────────────────────────
+  const avatarSrc: string =
+    (typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : '') ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(typeof displayName === 'string' ? displayName : 'U')}&background=059669&color=fff`;
+
+  // ── Navigate helper (closes menus) ────────────────────────────────────────
+  const handleNavigate = (page: NavigablePage) => {
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+    navigateTo(page);
+  };
+
   return (
     <>
       <header
