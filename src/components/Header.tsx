@@ -159,9 +159,6 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
     return fullName || user?.email || 'Student';
   }, [user?.email, user?.user_metadata]);
 
-  const avatarLabel = useMemo(() => {
-    return displayName.charAt(0).toUpperCase();
-  }, [displayName]);
 
   const avatarSrc = useMemo(() => {
     const avatarUrl = typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url.trim() : '';
@@ -365,11 +362,11 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   >
                     <button
                       ref={profileButtonRef}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
                       onClick={() => setProfileMenuOpen((prev) => !prev)}
                       aria-label="User menu"
                     >
-                      {avatarLabel}
+                      <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                     </button>
                     {profileMenuOpen && (
                       <div
@@ -377,21 +374,21 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                         className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl"
                       >
                         <button
-                          onClick={() => { navigateTo('vendor-dashboard'); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate(dashboardPage)}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <LayoutDashboard className="h-4 w-4" />
                           My Dashboard
                         </button>
                         <button
-                          onClick={() => { navigateTo('my-posts'); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate('my-posts')}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <Package className="h-4 w-4" />
                           My Orders
                         </button>
                         <button
-                          onClick={() => { navigateTo('community-forum'); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate('community-forum')}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <MessageSquare className="h-4 w-4" />
@@ -509,10 +506,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                                     ? 'bg-slate-700 font-medium text-white'
                                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
-                                onClick={() => {
-                                  navigateTo(link.page);
-                                  setMobileMenuOpen(false);
-                                }}
+                                onClick={() => handleNavigate(link.page)}
                               >
                                 {link.label}
                               </button>
@@ -527,7 +521,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                           <>
                             <Button
                               className="w-full rounded-full bg-slate-700 text-white hover:bg-slate-600"
-                              onClick={() => { navigateTo('vendor-dashboard'); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate(dashboardPage)}
                             >
                               My Dashboard
                             </Button>
@@ -544,13 +538,13 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                             <Button
                               variant="outline"
                               className="w-full rounded-full border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white"
-                              onClick={() => { navigateTo('signin'); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate('signin')}
                             >
                               Login
                             </Button>
                             <Button
                               className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
-                              onClick={() => { navigateTo('signup'); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate('signup')}
                             >
                               SignUp
                             </Button>

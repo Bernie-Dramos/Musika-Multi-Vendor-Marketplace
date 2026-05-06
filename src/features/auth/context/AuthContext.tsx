@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isSupabaseReady: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, metadata?: { full_name?: string; university?: string; country?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { full_name?: string; university?: string; country?: string; phone?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(async (
     email: string,
     password: string,
-    metadata?: { full_name?: string; university?: string; country?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }
+    metadata?: { full_name?: string; university?: string; country?: string; phone?: string; marketing_consent?: boolean; role?: 'student' | 'vendor' }
   ) => {
     if (!supabase) {
       return { error: { message: 'Supabase is not configured.' } as AuthError };
