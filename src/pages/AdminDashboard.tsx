@@ -50,6 +50,14 @@ export function AdminDashboard() {
           profile={profile}
         />
         <main className="flex-1 p-4 sm:p-8">
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => navigate('/admin-messages')}
+              className="rounded-full bg-[#0F172A] px-4 py-2 text-sm font-medium text-white hover:bg-[#1E293B]"
+            >
+              Messaging Oversight
+            </button>
+          </div>
           {renderSection()}
         </main>
       </div>

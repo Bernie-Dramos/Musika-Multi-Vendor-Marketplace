@@ -41,6 +41,11 @@ const loadServiceDetail = () => import('./pages/ServiceDetail');
 const loadProductDetail = () => import('./pages/ProductDetail');
 const loadVendorDetail = () => import('./pages/VendorDetail');
 const loadAuthCallback = () => import('./pages/AuthCallback');
+const loadMessagesInbox = () => import('./pages/MessagesInbox');
+const loadAdminMessagesOverview = () => import('./pages/AdminMessagesOverview');
+const loadCheckout = () => import('./pages/Checkout');
+const loadOrderConfirmation = () => import('./pages/OrderConfirmation');
+const loadMyOrders = () => import('./pages/MyOrders');
 
 const Home = lazy(() => loadHome().then((module) => ({ default: module.Home })));
 const Services = lazy(() => loadServices().then((module) => ({ default: module.Services })));
@@ -93,6 +98,17 @@ const VendorDetail = lazy(() =>
 const AuthCallback = lazy(() =>
   loadAuthCallback().then((module) => ({ default: module.AuthCallback }))
 );
+const MessagesInbox = lazy(() =>
+  loadMessagesInbox().then((module) => ({ default: module.MessagesInbox }))
+);
+const AdminMessagesOverview = lazy(() =>
+  loadAdminMessagesOverview().then((module) => ({ default: module.AdminMessagesOverview }))
+);
+const Checkout = lazy(() => loadCheckout().then((module) => ({ default: module.Checkout })));
+const OrderConfirmation = lazy(() =>
+  loadOrderConfirmation().then((module) => ({ default: module.OrderConfirmation }))
+);
+const MyOrders = lazy(() => loadMyOrders().then((module) => ({ default: module.MyOrders })));
 
 function RouteFallback() {
   return (
@@ -223,10 +239,51 @@ function AppShell() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <MessagesInbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-messages"
+              element={
+                <AdminRoute>
+                  <AdminMessagesOverview />
+                </AdminRoute>
+              }
+            />
 
             <Route path="/forgot-password" element={<ForgotPassword />} />
             {/* Auth callback: handles email confirmation, password recovery, magic link */}
             <Route path="/auth/callback" element={<AuthCallback />} />
+
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-confirmation"
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-orders"
+              element={
+                <ProtectedRoute>
+                  <MyOrders />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound navigateTo={navigateTo} />} />
           </Routes>

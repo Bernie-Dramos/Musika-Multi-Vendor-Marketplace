@@ -1,0 +1,265 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ProfileRow, VendorConversationRow, VendorMessageRow } from '@/lib/database.types';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+
+export interface ConversationWithParticipants extends VendorConversationRow {
+  student: Pick<ProfileRow, 'id' | 'full_name' | 'email' | 'avatar_url' | 'role'> | null;
+  vendor: Pick<ProfileRow, 'id' | 'full_name' | 'email' | 'avatar_url' | 'role'> | null;
+}
+
+export interface MessageWithSender extends VendorMessageRow {
+  sender: Pick<ProfileRow, 'id' | 'full_name' | 'email' | 'avatar_url' | 'role'> | null;
+}
+
+export function useMessagingConversationsQuery(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-conversations', userId],
+    queryFn: async () => {
+      if (!userId || !isSupabaseConfigured || !supabase) {
+        return [] as ConversationWithParticipants[];
+      }
+
+      const { data, error } = await supabase
+        .from('vendor_conversations')
+        .select(`
+          *,
+          student:profiles!vendor_conversations_student_id_fkey(id, full_name, email, avatar_url, role),
+          vendor:profiles!vendor_conversations_vendor_id_fkey(id, full_name, email, avatar_url, role)
+        `)
+        .or(`student_id.eq.${userId},vendor_id.eq.${userId}`)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to load conversations.');
+      }
+
+      return (data ?? []) as ConversationWithParticipants[];
+    },
+    enabled: Boolean(userId),
+  });
+}
+
+export function useConversationMessagesQuery(conversationId: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-messages', conversationId],
+    queryFn: async () => {
+      if (!conversationId || !isSupabaseConfigured || !supabase) {
+        return [] as MessageWithSender[];
+      }
+
+      const { data, error } = await supabase
+        .from('vendor_messages')
+        .select(`
+          *,
+          sender:profiles!vendor_messages_sender_id_fkey(id, full_name, email, avatar_url, role)
+        `)
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to load messages.');
+      }
+
+      return (data ?? []) as MessageWithSender[];
+    },
+    enabled: Boolean(conversationId),
+  });
+}
+
+export function useAvailablePartnersQuery(userId: string | undefined, role: ProfileRow['role'] | undefined) {
+  return useQuery({
+    queryKey: ['available-chat-partners', userId, role],
+    queryFn: async () => {
+      if (!userId || !role || !isSupabaseConfigured || !supabase || role === 'admin') {
+        return [] as Pick<ProfileRow, 'id' | 'full_name' | 'email' | 'avatar_url' | 'role' | 'university' | 'country'>[];
+      }
+
+      const targetRole = role === 'student' ? 'vendor' : 'student';
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, avatar_url, role, university, country')
+        .eq('role', targetRole)
+        .neq('id', userId)
+        .order('full_name', { ascending: true });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to load chat partners.');
+      }
+
+      return data ?? [];
+    },
+    enabled: Boolean(userId && role),
+  });
+}
+
+interface StartConversationInput {
+  partnerId: string;
+  role: Extract<ProfileRow['role'], 'student' | 'vendor'>;
+}
+
+export function useStartConversationMutation(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ partnerId, role }: StartConversationInput) => {
+      if (!userId || !isSupabaseConfigured || !supabase) {
+        throw new Error('Messaging is unavailable without Supabase configuration.');
+      }
+
+      const studentId = role === 'student' ? userId : partnerId;
+      const vendorId = role === 'vendor' ? userId : partnerId;
+
+      const { data: existing, error: existingError } = await supabase
+        .from('vendor_conversations')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('vendor_id', vendorId)
+        .maybeSingle();
+
+      if (existingError) {
+        throw new Error(existingError.message || 'Failed to check existing conversation.');
+      }
+
+      if (existing) {
+        return existing;
+      }
+
+      const { data, error } = await supabase
+        .from('vendor_conversations')
+        .insert({
+          student_id: studentId,
+          vendor_id: vendorId,
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to create conversation.');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-conversations', userId] });
+    },
+  });
+}
+
+interface SendMessageInput {
+  conversationId: string;
+  message: string;
+  role: Extract<ProfileRow['role'], 'student' | 'vendor'>;
+}
+
+export function useSendMessageMutation(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ conversationId, message, role }: SendMessageInput) => {
+      if (!userId || !isSupabaseConfigured || !supabase) {
+        throw new Error('Messaging is unavailable without Supabase configuration.');
+      }
+
+      const payload = message.trim();
+      if (!payload) {
+        throw new Error('Message cannot be empty.');
+      }
+
+      const { data, error } = await supabase
+        .from('vendor_messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: userId,
+          sender_role: role,
+          message: payload,
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to send message.');
+      }
+
+      return data;
+    },
+    onSuccess: (message) => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-messages', message.conversation_id] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-conversations', userId] });
+    },
+  });
+}
+
+interface MarkConversationReadInput {
+  conversationId: string;
+  role: Extract<ProfileRow['role'], 'student' | 'vendor'>;
+}
+
+export function useMarkConversationReadMutation(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ conversationId, role }: MarkConversationReadInput) => {
+      if (!userId || !isSupabaseConfigured || !supabase) {
+        return;
+      }
+
+      const nowIso = new Date().toISOString();
+
+      const { error: readError } = await supabase
+        .from('vendor_messages')
+        .update({ read_at: nowIso })
+        .eq('conversation_id', conversationId)
+        .is('read_at', null)
+        .neq('sender_id', userId);
+
+      if (readError) {
+        throw new Error(readError.message || 'Failed to mark messages as read.');
+      }
+
+      const updatePayload = role === 'student'
+        ? { student_unread_count: 0 }
+        : { vendor_unread_count: 0 };
+
+      const { error: conversationError } = await supabase
+        .from('vendor_conversations')
+        .update(updatePayload)
+        .eq('id', conversationId);
+
+      if (conversationError) {
+        throw new Error(conversationError.message || 'Failed to update unread count.');
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-messages', variables.conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-conversations', userId] });
+    },
+  });
+}
+
+export function useAdminConversationOverviewQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-vendor-conversations'],
+    queryFn: async () => {
+      if (!enabled || !isSupabaseConfigured || !supabase) {
+        return [] as ConversationWithParticipants[];
+      }
+
+      const { data, error } = await supabase
+        .from('vendor_conversations')
+        .select(`
+          *,
+          student:profiles!vendor_conversations_student_id_fkey(id, full_name, email, avatar_url, role),
+          vendor:profiles!vendor_conversations_vendor_id_fkey(id, full_name, email, avatar_url, role)
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to load admin conversation overview.');
+      }
+
+      return (data ?? []) as ConversationWithParticipants[];
+    },
+    enabled,
+  });
+}

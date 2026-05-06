@@ -345,6 +345,112 @@ export type Database = {
           },
         ];
       };
+      vendor_conversations: {
+        Row: {
+          created_at: string;
+          id: string;
+          last_message_at: string | null;
+          last_message_preview: string | null;
+          last_message_sender_id: string | null;
+          student_id: string;
+          student_unread_count: number;
+          updated_at: string;
+          vendor_id: string;
+          vendor_unread_count: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          last_message_at?: string | null;
+          last_message_preview?: string | null;
+          last_message_sender_id?: string | null;
+          student_id: string;
+          student_unread_count?: number;
+          updated_at?: string;
+          vendor_id: string;
+          vendor_unread_count?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          last_message_at?: string | null;
+          last_message_preview?: string | null;
+          last_message_sender_id?: string | null;
+          student_id?: string;
+          student_unread_count?: number;
+          updated_at?: string;
+          vendor_id?: string;
+          vendor_unread_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vendor_conversations_last_message_sender_id_fkey';
+            columns: ['last_message_sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendor_conversations_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendor_conversations_vendor_id_fkey';
+            columns: ['vendor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      vendor_messages: {
+        Row: {
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          message: string;
+          read_at: string | null;
+          sender_id: string;
+          sender_role: Database['public']['Enums']['user_role'];
+        };
+        Insert: {
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          message: string;
+          read_at?: string | null;
+          sender_id: string;
+          sender_role: Database['public']['Enums']['user_role'];
+        };
+        Update: {
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          message?: string;
+          read_at?: string | null;
+          sender_id?: string;
+          sender_role?: Database['public']['Enums']['user_role'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vendor_messages_conversation_id_fkey';
+            columns: ['conversation_id'];
+            isOneToOne: false;
+            referencedRelation: 'vendor_conversations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendor_messages_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       vendor_applications: {
         Row: {
           bank_account_holder: string | null;
@@ -456,3 +562,5 @@ export type ForumCommentRow = Database['public']['Tables']['forum_comments']['Ro
 export type SupportTicketRow = Database['public']['Tables']['support_tickets']['Row'];
 export type SupportMessageRow = Database['public']['Tables']['support_messages']['Row'];
 export type SavedResourceRow = Database['public']['Tables']['saved_resources']['Row'];
+export type VendorConversationRow = Database['public']['Tables']['vendor_conversations']['Row'];
+export type VendorMessageRow = Database['public']['Tables']['vendor_messages']['Row'];

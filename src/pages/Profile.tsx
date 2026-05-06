@@ -159,6 +159,9 @@ export function Profile() {
             <Button variant="outline" className="w-full border-slate-300" onClick={() => navigate('/my-tickets')}>
               My Tickets
             </Button>
+            <Button variant="outline" className="w-full border-slate-300" onClick={() => navigate('/messages')}>
+              Open Message Inbox
+            </Button>
             <Button variant="destructive" className="w-full" onClick={() => void handleSignOut()}>
               Sign Out
             </Button>

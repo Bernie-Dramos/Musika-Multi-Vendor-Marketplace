@@ -4,6 +4,7 @@ import {
   Bell,
   CheckCircle2,
   ChevronRight,
+  MessageCircle,
   Search,
   ShoppingCart,
 } from 'lucide-react';
@@ -132,6 +133,14 @@ export function VendorDetail() {
                   Specializing in essential {vendor.categories.slice(0, 2).join(' and ').toLowerCase()} services tailored for
                   international students. Providing student-verified quality with localized support and fast campus-wide delivery.
                 </p>
+                <Button
+                  onClick={() => navigate(`/messages?vendor=${encodeURIComponent(vendor.name)}`)}
+                  variant="outline"
+                  className="mt-4 border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-white"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Contact Vendor in Inbox
+                </Button>
               </div>
             </div>
           </div>

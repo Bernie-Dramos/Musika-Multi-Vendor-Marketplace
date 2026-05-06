@@ -15,7 +15,6 @@ import {
   getDeterministicLanguages,
   getDeterministicResponseTime,
   getVendorAvatarUrl,
-  getVendorSlug,
   services,
 } from '@/lib/data';
 import { useCart } from '@/hooks/useCart';
@@ -33,7 +32,7 @@ function StarRow({ rating }: { rating: number }) {
 export function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, setIsCartOpen } = useCart();
 
   const service = services.find((s) => s.id === Number(id));
 
@@ -79,7 +78,9 @@ export function ServiceDetail() {
       image: service.image,
       vendor: service.vendor,
       category: categoryLabel,
+      type: 'service',
     });
+    setIsCartOpen(true);
   };
 
   return (
@@ -240,7 +241,7 @@ export function ServiceDetail() {
               <Button
                 variant="outline"
                 className="h-11 w-full rounded-xl border-[#374151] text-white hover:bg-[#1a1f2e] bg-transparent"
-                onClick={() => navigate(`/vendor/${getVendorSlug(service.vendor)}`)}
+                onClick={() => navigate(`/messages?vendor=${encodeURIComponent(service.vendor)}`)}
               >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact Vendor

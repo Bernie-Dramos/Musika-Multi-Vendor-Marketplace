@@ -9,7 +9,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getVendorAvatarUrl, getVendorSlug, marketplaceProducts } from '@/lib/data';
+import { getVendorAvatarUrl, marketplaceProducts } from '@/lib/data';
 import { useCart } from '@/hooks/useCart';
 import { formatINR, QuickAddButton } from '@/components/musika/ui-primitives';
 
@@ -25,7 +25,7 @@ function StarRow({ rating }: { rating: number }) {
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, setIsCartOpen } = useCart();
 
   const product = marketplaceProducts.find((p) => p.id === Number(id));
 
@@ -81,7 +81,9 @@ export function ProductDetail() {
       image: product.image,
       vendor,
       category: product.subcategory ?? 'Marketplace',
+      type: 'product',
     });
+    setIsCartOpen(true);
   };
 
   return (
@@ -306,7 +308,7 @@ export function ProductDetail() {
             {/* Contact vendor */}
             <button
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#374151] py-2.5 text-sm text-[#9ca3af] hover:border-white hover:text-white transition-colors"
-              onClick={() => navigate(`/vendor/${getVendorSlug(vendor)}`)}
+              onClick={() => navigate(`/messages?vendor=${encodeURIComponent(vendor)}`)}
             >
               <MessageCircle className="h-4 w-4" />
               Contact Vendor
@@ -342,7 +344,9 @@ export function ProductDetail() {
                             image: p.image,
                             vendor: p.vendor ?? 'Various Vendors',
                             category: p.subcategory ?? 'Marketplace',
+                            type: 'product',
                           });
+                          setIsCartOpen(true);
                         }}
                       />
                     </div>
