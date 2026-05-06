@@ -13,7 +13,7 @@ import { CartSidebar } from './components/CartSidebar';
 import { CartProvider } from './hooks/useCart';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './features/auth/context/AuthContext';
-import { AdminRoute, AuthRoute, ProtectedRoute } from './features/auth/components/RouteGuards';
+import { AdminRoute, AuthRoute, ProtectedRoute, VendorRoute } from './features/auth/components/RouteGuards';
 import { getPageFromPath, pageToPath, type NavigablePage } from './lib/navigation';
 
 const loadHome = () => import('./pages/Home');
@@ -140,6 +140,9 @@ function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPage = getPageFromPath(location.pathname);
+  const isDashboardRoute =
+    location.pathname.startsWith('/vendor-dashboard') ||
+    location.pathname.startsWith('/admin-dashboard');
 
   const navigateTo = (page: NavigablePage) => {
     navigate(pageToPath[page]);
@@ -148,7 +151,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header navigateTo={navigateTo} currentPage={currentPage} />
+      {!isDashboardRoute ? <Header navigateTo={navigateTo} currentPage={currentPage} /> : null}
       <main className="flex-1">
         <Suspense fallback={<DelayedRouteFallback />}>
           <Routes>
@@ -202,9 +205,9 @@ function AppShell() {
             <Route
               path="/vendor-dashboard"
               element={
-                <ProtectedRoute>
+                <VendorRoute>
                   <VendorDashboard />
-                </ProtectedRoute>
+                </VendorRoute>
               }
             />
             <Route
@@ -289,8 +292,8 @@ function AppShell() {
           </Routes>
         </Suspense>
       </main>
-      <Footer navigateTo={navigateTo} />
-      <CartSidebar />
+      {!isDashboardRoute ? <Footer navigateTo={navigateTo} /> : null}
+      {!isDashboardRoute ? <CartSidebar /> : null}
     </div>
   );
 }

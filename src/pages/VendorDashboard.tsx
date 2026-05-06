@@ -625,10 +625,16 @@ function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl
 // ── Root export ──────────────────────────────────────────────────────────────
 
 export function VendorDashboard() {
-  const { user } = useAuth();
-  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'User';
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const role = user?.user_metadata?.role as string | undefined;
+  const { user, profile } = useAuth();
+  const displayName =
+    profile?.full_name ??
+    user?.user_metadata?.full_name ??
+    user?.email?.split('@')[0] ??
+    'User';
+  const avatarUrl =
+    profile?.avatar_url ??
+    (user?.user_metadata?.avatar_url as string | undefined);
+  const role = profile?.role ?? (user?.user_metadata?.role as string | undefined);
 
   if (role === 'vendor') {
     return <VendorView displayName={displayName} avatarUrl={avatarUrl} />;

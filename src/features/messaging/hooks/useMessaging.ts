@@ -323,8 +323,13 @@ export function useUnreadMessageCountQuery(
 
   useEffect(() => {
     if (!userId || !role || !isSupabaseConfigured || !supabase || role === 'admin') return;
+
+    // Use a unique channel name per hook instance to avoid collisions when
+    // Header and page-level hooks subscribe at the same time.
+    const channelName = `unread-count-${userId}-${role}-${Math.random().toString(36).slice(2, 8)}`;
+
     const channel = supabase
-      .channel(`unread-count-${userId}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `student_id=eq.${userId}` }, () => {
         void queryClient.invalidateQueries({ queryKey: ['unread-message-count', userId] });
       })
