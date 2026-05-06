@@ -167,6 +167,9 @@ export function useStartConversationMutation(userId: string | undefined) {
         .single();
 
       if (error) {
+        if (error.code === '42501' || /row-level security|policy/i.test(error.message)) {
+          throw new Error('Only approved vendors can start new conversations right now.');
+        }
         throw new Error(error.message || 'Failed to create conversation.');
       }
 
@@ -319,7 +322,7 @@ export function useUnreadMessageCountQuery(
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!userId || !isSupabaseConfigured || !supabase) return;
+    if (!userId || !role || !isSupabaseConfigured || !supabase || role === 'admin') return;
     const channel = supabase
       .channel(`unread-count-${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vendor_conversations', filter: `student_id=eq.${userId}` }, () => {
@@ -330,7 +333,7 @@ export function useUnreadMessageCountQuery(
       })
       .subscribe();
     return () => { void supabase!.removeChannel(channel); };
-  }, [userId, queryClient]);
+  }, [userId, role, queryClient]);
 
   return useQuery({
     queryKey: ['unread-message-count', userId],
