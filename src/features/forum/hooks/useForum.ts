@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchAllForumPosts,
   fetchTrendingForumPosts,
-  fetchUnansweredForumPosts,
   fetchMyForumPosts,
   fetchForumPostBySlug,
   fetchForumPostReplies,
@@ -28,12 +27,7 @@ export function useTrendingForumPostsQuery() {
   });
 }
 
-export function useUnansweredForumPostsQuery() {
-  return useQuery({
-    queryKey: ['forum-posts', 'unanswered'],
-    queryFn: fetchUnansweredForumPosts,
-  });
-}
+
 
 export function useMyForumPostsQuery(authorId: string | undefined) {
   return useQuery({

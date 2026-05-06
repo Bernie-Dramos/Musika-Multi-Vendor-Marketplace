@@ -21,6 +21,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useUnreadMessageCountQuery } from '@/features/messaging/hooks/useMessaging';
 import type { AppPage, NavigablePage } from '@/lib/navigation';
+import { translateText } from '@/lib/api-client';
 
 type CurrentPage = AppPage;
 
@@ -37,7 +38,7 @@ const navLinks = [
   { label: 'Help & Support', page: 'help-support' as NavigablePage },
 ];
 
-const languageOptions = ['EN', 'AR', 'HI', 'PT', 'SN', 'XH', 'ZU'];
+const languageOptions = ['English', 'Shona', 'Portuguese', 'Hindi'];
 
 // Filled MapPin SVG (lucide MapPin is outline; we use a filled variant inline)
 function FilledMapPin({ className }: { className?: string }) {
@@ -60,7 +61,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('EN');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isElevated, setIsElevated] = useState(false);
 
   // Location state
@@ -113,6 +114,86 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
     };
   }, []);
 
+  // ── Translation Logic ─────────────────────────────────────────────────────
+  const originalTexts = useRef<Map<Node, string>>(new Map());
+  const translationCache = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    const performTranslation = async () => {
+      if (selectedLanguage === 'English') {
+        // Restore original texts
+        originalTexts.current.forEach((text, node) => {
+          node.textContent = text;
+        });
+        return;
+      }
+
+      const langPairs: Record<string, string> = {
+        'Shona': 'en|sn',
+        'Portuguese': 'en|pt',
+        'Hindi': 'en|hi',
+      };
+
+      const langpair = langPairs[selectedLanguage];
+      if (!langpair) return;
+
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: (node) => {
+          const text = node.textContent?.trim();
+          if (!text || text.length === 0) return NodeFilter.FILTER_REJECT;
+
+          // Skip Musika variations if they are the ONLY words
+          if (/^(Musika|Musika Marketplace|Musika Multivendor Marketplace)$/i.test(text)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          // Skip purely numeric values, prices, or percentages
+          if (/^[\d.,$%£¥€+-\s/%]+$/.test(text)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+
+      const nodesToTranslate: Node[] = [];
+      let currentNode = walker.nextNode();
+      while (currentNode) {
+        nodesToTranslate.push(currentNode);
+        currentNode = walker.nextNode();
+      }
+
+      // Store original text if not already stored
+      nodesToTranslate.forEach((node) => {
+        if (!originalTexts.current.has(node)) {
+          originalTexts.current.set(node, node.textContent || '');
+        }
+      });
+
+      // Translate each node
+      await Promise.all(
+        nodesToTranslate.map(async (node) => {
+          const originalText = originalTexts.current.get(node);
+          if (originalText) {
+            const cacheKey = `${langpair}:${originalText}`;
+            if (translationCache.current.has(cacheKey)) {
+              node.textContent = translationCache.current.get(cacheKey) || originalText;
+              return;
+            }
+
+            const translated = await translateText(originalText, langpair);
+            if (translated && translated !== originalText) {
+              translationCache.current.set(cacheKey, translated);
+              node.textContent = translated;
+            }
+          }
+        })
+      );
+    };
+
+    performTranslation();
+  }, [selectedLanguage, currentPage]);
+
   // ── Auto-detect location on mount ─────────────────────────────────────────
   const detectLocation = () => {
     if (!navigator.geolocation) {
@@ -161,9 +242,6 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
     return fullName || user?.email || 'Student';
   }, [user?.email, user?.user_metadata]);
 
-  const avatarLabel = useMemo(() => {
-    return displayName.charAt(0).toUpperCase();
-  }, [displayName]);
 
   const dashboardPage = useMemo<NavigablePage>(() => {
     const role = profile?.role;
@@ -283,7 +361,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                     className="flex items-center gap-0.5 rounded-full px-2 py-1.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
                   >
                     <Globe className="h-4 w-4" />
-                    <span className="ml-1 text-xs font-medium">{selectedLanguage.slice(0, 2).toUpperCase()}</span>
+                    <span className="ml-1 text-xs font-medium">{selectedLanguage === 'English' ? 'EN' : selectedLanguage.slice(0, 2).toUpperCase()}</span>
                     <ChevronDown className="h-3 w-3 opacity-70" />
                   </button>
                   {languageMenuOpen && (
@@ -369,11 +447,11 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                   >
                     <button
                       ref={profileButtonRef}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
                       onClick={() => setProfileMenuOpen((prev) => !prev)}
                       aria-label="User menu"
                     >
-                      {avatarLabel}
+                      <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
                     </button>
                     {profileMenuOpen && (
                       <div
@@ -381,21 +459,21 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                         className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-slate-700 bg-[#10131C] p-1 shadow-xl"
                       >
                         <button
-                          onClick={() => { navigateTo(dashboardPage); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate(dashboardPage)}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <LayoutDashboard className="h-4 w-4" />
                           My Dashboard
                         </button>
                         <button
-                          onClick={() => { navigate('/my-orders'); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate('my-posts')}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <Package className="h-4 w-4" />
                           My Orders
                         </button>
                         <button
-                          onClick={() => { navigateTo('messages-inbox'); setProfileMenuOpen(false); }}
+                          onClick={() => handleNavigate('community-forum')}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           <MessageSquare className="h-4 w-4" />
@@ -492,7 +570,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                             <button
                               key={language}
                               onClick={() => setSelectedLanguage(language)}
-                              className={`rounded-full px-2 py-1.5 text-xs font-medium transition-colors ${
+                              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
                                 selectedLanguage === language
                                   ? 'bg-slate-600 text-white'
                                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -515,10 +593,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                                     ? 'bg-slate-700 font-medium text-white'
                                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
-                                onClick={() => {
-                                  navigateTo(link.page);
-                                  setMobileMenuOpen(false);
-                                }}
+                                onClick={() => handleNavigate(link.page)}
                               >
                                 {link.label}
                               </button>
@@ -533,7 +608,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                           <>
                             <Button
                               className="w-full rounded-full bg-slate-700 text-white hover:bg-slate-600"
-                              onClick={() => { navigateTo(dashboardPage); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate(dashboardPage)}
                             >
                               My Dashboard
                             </Button>
@@ -562,13 +637,13 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                             <Button
                               variant="outline"
                               className="w-full rounded-full border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white"
-                              onClick={() => { navigateTo('signin'); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate('signin')}
                             >
                               Login
                             </Button>
                             <Button
                               className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
-                              onClick={() => { navigateTo('signup'); setMobileMenuOpen(false); }}
+                              onClick={() => handleNavigate('signup')}
                             >
                               SignUp
                             </Button>

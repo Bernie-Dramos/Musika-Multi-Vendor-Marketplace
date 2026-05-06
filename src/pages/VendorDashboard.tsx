@@ -258,7 +258,6 @@ const initialTags = ['Shona', 'Vegan', 'Cultural'];
 function VendorDashboardOverview({
   setActiveNav,
 }: {
-  displayName?: string;
   setActiveNav: (nav: string) => void;
 }) {
   return (
@@ -277,11 +276,16 @@ function VendorDashboardOverview({
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {vendorStats.map(({ label, value, change, positive }) => (
           <div key={label} className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
-            <p className="text-sm text-[#6b7280]">{label}</p>
-            <p className="mt-2 text-2xl font-bold text-[#111111]">{value}</p>
-            <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${positive ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
-              {positive ? '▲' : '▼'} {change}
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[#6b7280]">{label}</p>
+                <p className="mt-2 text-2xl font-bold text-[#111111]">{value}</p>
+                <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${positive ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
+                  {positive ? '▲' : '▼'} {change}
+                </p>
+              </div>
+              <Icon className="h-5 w-5 text-[#374151]" />
+            </div>
           </div>
         ))}
       </div>
@@ -583,7 +587,7 @@ function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl
           </header>
 
           {activeNav === 'Dashboard' && (
-            <VendorDashboardOverview displayName={displayName} setActiveNav={setActiveNav} />
+            <VendorDashboardOverview setActiveNav={setActiveNav} />
           )}
           {activeNav === 'My Listings' && <VendorCreateListing />}
           {!['Dashboard', 'My Listings'].includes(activeNav) && (
