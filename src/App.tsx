@@ -13,7 +13,7 @@ import { CartSidebar } from './components/CartSidebar';
 import { CartProvider } from './hooks/useCart';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './features/auth/context/AuthContext';
-import { AuthRoute, ProtectedRoute } from './features/auth/components/RouteGuards';
+import { AdminRoute, AuthRoute, ProtectedRoute } from './features/auth/components/RouteGuards';
 import { getPageFromPath, pageToPath, type NavigablePage } from './lib/navigation';
 
 const loadHome = () => import('./pages/Home');
@@ -194,9 +194,9 @@ function AppShell() {
             <Route
               path="/admin-dashboard"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <AdminDashboard />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route

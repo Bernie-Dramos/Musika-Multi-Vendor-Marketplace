@@ -39,3 +39,23 @@ export function AuthRoute({ children }: { children: ReactNode }) {
 
   return <>{children}</>;
 }
+
+export function AdminRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <GuardLoading />;
+  }
+
+  if (!isAuthenticated) {
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/signin" state={{ from }} replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
