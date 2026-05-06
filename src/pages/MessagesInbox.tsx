@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { MessageCircle, SendHorizontal } from 'lucide-react';
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -41,6 +41,7 @@ export function MessagesInbox() {
   const [selectedPartnerId, setSelectedPartnerId] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const vendorBootstrapHandled = useRef(false);
 
   const conversationsQuery = useMessagingConversationsQuery(user?.id);
   const conversations = conversationsQuery.data ?? [];
@@ -55,6 +56,27 @@ export function MessagesInbox() {
   const sendMessageMutation = useSendMessageMutation(user?.id);
   const markReadMutation = useMarkConversationReadMutation(user?.id);
   const messagingRole = profile?.role === 'student' || profile?.role === 'vendor' ? profile.role : null;
+  const normalizedVendorHint = vendorHint?.trim().toLowerCase() ?? '';
+  const matchedHintPartner = normalizedVendorHint
+    ? partners.find((partner) => {
+      if (partner.id.toLowerCase() === normalizedVendorHint) {
+        return true;
+      }
+
+      const candidate = `${partner.full_name ?? ''} ${partner.email ?? ''}`.toLowerCase();
+      return candidate.includes(normalizedVendorHint);
+    })
+    : undefined;
+  const vendorHintNoMatch =
+    Boolean(vendorHint) &&
+    messagingRole === 'student' &&
+    !partnersQuery.isLoading &&
+    partners.length >= 0 &&
+    !matchedHintPartner;
+
+  useEffect(() => {
+    vendorBootstrapHandled.current = false;
+  }, [vendorHint, messagingRole, user?.id]);
 
   useEffect(() => {
     if (!selectedConversationId && conversations.length > 0) {
@@ -68,15 +90,66 @@ export function MessagesInbox() {
       return;
     }
 
-    const match = partners.find((partner) => {
-      const candidate = `${partner.full_name ?? ''} ${partner.email ?? ''}`.toLowerCase();
-      return candidate.includes(vendorHint.toLowerCase());
-    });
+    const match = matchedHintPartner;
 
     if (match) {
       setSelectedPartnerId(match.id);
     }
-  }, [partners, profile, vendorHint]);
+  }, [matchedHintPartner, partners.length, profile, vendorHint]);
+
+  useEffect(() => {
+    if (
+      vendorBootstrapHandled.current ||
+      !vendorHint ||
+      !messagingRole ||
+      messagingRole !== 'student' ||
+      partnersQuery.isLoading ||
+      startConversationMutation.isPending
+    ) {
+      return;
+    }
+
+    const match = matchedHintPartner;
+
+    if (!match) {
+      setStatusMessage('This vendor is not available for messaging yet. Please choose an approved vendor below.');
+      vendorBootstrapHandled.current = true;
+      return;
+    }
+
+    const existingConversation = conversations.find((conversation) => conversation.vendor_id === match.id);
+
+    if (existingConversation) {
+      setSelectedConversationId(existingConversation.id);
+      setSelectedPartnerId('');
+      setStatusMessage(null);
+      vendorBootstrapHandled.current = true;
+      return;
+    }
+
+    vendorBootstrapHandled.current = true;
+    void startConversationMutation
+      .mutateAsync({
+        partnerId: match.id,
+        role: messagingRole,
+      })
+      .then((conversation) => {
+        setSelectedConversationId(conversation.id);
+        setSelectedPartnerId('');
+        setStatusMessage('Conversation is ready. You can send your first message now.');
+      })
+      .catch((error) => {
+        setStatusMessage(error instanceof Error ? error.message : 'Unable to start conversation.');
+      });
+  }, [
+    conversations,
+    matchedHintPartner,
+    messagingRole,
+    partnersQuery.isLoading,
+    startConversationMutation,
+    startConversationMutation.isPending,
+    vendorHint,
+  ]);
 
   useEffect(() => {
     if (!selectedConversationId || !messagingRole) {
@@ -222,6 +295,28 @@ export function MessagesInbox() {
                   </option>
                 ))}
               </select>
+              {partnersQuery.isLoading ? (
+                <p className="text-xs text-slate-500">Loading available contacts...</p>
+              ) : null}
+              {!partnersQuery.isLoading && partners.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  {profile?.role === 'student'
+                    ? 'No approved vendors are available yet. Once a vendor is approved, they will appear here.'
+                    : 'No students are available yet. New student accounts will appear here automatically.'}
+                </p>
+              ) : null}
+              {vendorHintNoMatch ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                  <p className="text-xs text-amber-700">
+                    The vendor from your link is unavailable for messaging right now. You can pick an approved vendor below or browse listings.
+                  </p>
+                  <Link to="/services" className="mt-2 inline-block">
+                    <Button variant="outline" className="h-8 border-amber-300 text-amber-800 hover:bg-amber-100">
+                      Browse Approved Vendors
+                    </Button>
+                  </Link>
+                </div>
+              ) : null}
               <Button
                 className="w-full bg-[#0F172A] text-white hover:bg-[#1E293B]"
                 disabled={!selectedPartnerId || startConversationMutation.isPending || partnersQuery.isLoading}
