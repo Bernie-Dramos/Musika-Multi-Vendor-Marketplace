@@ -1,0 +1,11 @@
+# Netlify configuration for Musika Multi-Vendor Marketplace
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Redirect all routes to index.html for React Router (SPA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
