@@ -44,10 +44,10 @@ export function AdminOrders() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-[#111111]">Orders & Activity</h1>
+          <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Orders & Activity</h1>
           <p className="text-[#6b7280]">Combined feed of vendor submissions and support tickets.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <button
             onClick={() => setView('feed')}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${view === 'feed' ? 'bg-[#111111] text-white' : 'border border-[#d1d5db] text-[#374151] hover:bg-[#f3f4f6]'}`}

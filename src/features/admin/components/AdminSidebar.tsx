@@ -33,7 +33,7 @@ export function AdminSidebar({ activeSection, setActiveSection, profile, onLogou
   const displayName = profile?.full_name ?? profile?.email?.split('@')[0] ?? 'Admin';
 
   return (
-    <aside className="hidden min-h-screen w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
+    <aside className="hidden min-h-full w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
       <div>
         <h1 className="text-[30px] font-bold">Musika</h1>
         <p className="mt-1 text-[10px] uppercase tracking-[1px] text-[#6b7280]">

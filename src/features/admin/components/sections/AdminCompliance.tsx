@@ -52,7 +52,7 @@ export function AdminCompliance() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-[#111111]">Compliance</h1>
+        <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Compliance</h1>
         <p className="text-[#6b7280]">Review vendor applications requiring revision and moderate forum content.</p>
       </div>
 

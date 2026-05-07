@@ -13,7 +13,7 @@ import { CartSidebar } from './components/CartSidebar';
 import { CartProvider } from './hooks/useCart';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './features/auth/context/AuthContext';
-import { AdminRoute, AuthRoute, ProtectedRoute, VendorRoute } from './features/auth/components/RouteGuards';
+import { AdminRoute, AuthRoute, NonVendorRoute, ProtectedRoute, VendorRoute } from './features/auth/components/RouteGuards';
 import { getPageFromPath, pageToPath, type NavigablePage } from './lib/navigation';
 
 const loadHome = () => import('./pages/Home');
@@ -140,7 +140,7 @@ function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPage = getPageFromPath(location.pathname);
-  const isDashboardRoute =
+  const hideDashboardChrome =
     location.pathname.startsWith('/vendor-dashboard') ||
     location.pathname.startsWith('/admin-dashboard');
 
@@ -151,8 +151,8 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {!isDashboardRoute ? <Header navigateTo={navigateTo} currentPage={currentPage} /> : null}
-      <main className="flex-1">
+      <Header navigateTo={navigateTo} currentPage={currentPage} />
+      <main className={hideDashboardChrome ? 'flex flex-1 bg-[#f9fafb]' : 'flex-1'}>
         <Suspense fallback={<DelayedRouteFallback />}>
           <Routes>
             <Route path="/" element={<Home navigateTo={navigateTo} />} />
@@ -174,7 +174,14 @@ function AppShell() {
               }
             />
             <Route path="/community-forum/:slug" element={<CommunityForumDetail />} />
-            <Route path="/become-vendor" element={<BecomeVendor />} />
+            <Route
+              path="/become-vendor"
+              element={
+                <NonVendorRoute>
+                  <BecomeVendor />
+                </NonVendorRoute>
+              }
+            />
             <Route path="/help-support" element={<HelpSupport />} />
 
             <Route
@@ -292,8 +299,8 @@ function AppShell() {
           </Routes>
         </Suspense>
       </main>
-      {!isDashboardRoute ? <Footer navigateTo={navigateTo} /> : null}
-      {!isDashboardRoute ? <CartSidebar /> : null}
+      {!hideDashboardChrome ? <Footer navigateTo={navigateTo} /> : null}
+      {!hideDashboardChrome ? <CartSidebar /> : null}
     </div>
   );
 }

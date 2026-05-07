@@ -81,8 +81,8 @@ function StudentView({ displayName, avatarUrl }: { displayName: string; avatarUr
   const [activeNav, setActiveNav] = useState('Dashboard');
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden min-h-screen w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
+    <div className="flex min-h-full">
+      <aside className="hidden min-h-full w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
         <h1 className="text-[30px] font-bold">Musika</h1>
         <p className="mt-1 text-[10px] uppercase tracking-[1px] text-[#6b7280]">International Student Multivendor Marketplace</p>
 
@@ -520,9 +520,9 @@ function VendorView({ displayName, avatarUrl }: { displayName: string; avatarUrl
   const unreadCount = useUnreadMessageCountQuery(user?.id, profile?.role).data ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
+    <div className="min-h-full bg-[#f9fafb]">
       <div className="flex">
-        <aside className="hidden min-h-screen w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
+        <aside className="hidden min-h-full w-[260px] shrink-0 flex-col bg-[#0f1523] px-5 py-6 text-white lg:flex">
           <h1 className="text-[30px] font-bold">Musika</h1>
           <p className="mt-1 text-[10px] uppercase tracking-[1px] text-[#6b7280]">International Student Multivendor Marketplace</p>
 

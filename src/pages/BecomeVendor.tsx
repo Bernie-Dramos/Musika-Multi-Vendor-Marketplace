@@ -119,13 +119,20 @@ type PageState = 'form' | 'success';
 
 export function BecomeVendor() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const existingApplicationQuery = useVendorApplicationQuery(user?.id);
   const submitApplicationMutation = useUpsertVendorApplicationMutation(user?.id);
 
   const [pageState, setPageState] = useState<PageState>('form');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Redirect vendors and admins — they already have vendor access
+  useEffect(() => {
+    if (profile?.role === 'vendor' || profile?.role === 'admin') {
+      navigate('/vendor-dashboard');
+    }
+  }, [profile?.role, navigate]);
 
   // Redirect already-applied users to their dashboard
   useEffect(() => {

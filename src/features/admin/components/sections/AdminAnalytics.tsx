@@ -28,7 +28,7 @@ export function AdminAnalytics() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-[#111111]">Analytics</h1>
+        <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Analytics</h1>
         <p className="text-[#6b7280]">Platform trends over the last 8 weeks.</p>
       </div>
 
@@ -42,7 +42,7 @@ export function AdminAnalytics() {
         ].map((c) => (
           <div key={c.label} className="rounded-xl border border-[#e5e7eb] bg-white p-5">
             <p className="text-sm text-[#6b7280]">{c.label}</p>
-            <p className="mt-1 text-4xl font-bold text-[#111111]">{typeof c.value === 'number' ? c.value.toLocaleString() : c.value}</p>
+            <p className="mt-1 text-3xl font-bold text-[#111111] sm:text-4xl">{typeof c.value === 'number' ? c.value.toLocaleString() : c.value}</p>
           </div>
         ))}
       </div>

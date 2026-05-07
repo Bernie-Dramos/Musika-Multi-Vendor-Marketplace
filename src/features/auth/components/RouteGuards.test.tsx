@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { AuthRoute, ProtectedRoute } from '@/features/auth/components/RouteGuards';
+import { AuthRoute, NonVendorRoute, ProtectedRoute } from '@/features/auth/components/RouteGuards';
 
 const mockUseAuth = jest.fn();
 
@@ -78,7 +78,12 @@ describe('Authentication module - RouteGuards', () => {
   });
 
   it('redirects authenticated users away from auth pages', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      profile: { role: 'student' },
+      user: { user_metadata: {} },
+    });
 
     render(
       <MemoryRouter initialEntries={['/signin']}>
@@ -97,5 +102,124 @@ describe('Authentication module - RouteGuards', () => {
     );
 
     expect(screen.getByText('Profile Page')).toBeInTheDocument();
+  });
+
+  it('shows loading state in non-vendor route while auth status is unresolved', () => {
+    mockUseAuth.mockReturnValue({ isLoading: true, profile: null, user: null });
+
+    render(
+      <MemoryRouter initialEntries={['/become-vendor']}>
+        <Routes>
+          <Route
+            path="/become-vendor"
+            element={
+              <NonVendorRoute>
+                <div>Become Vendor Page</div>
+              </NonVendorRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('allows guests in non-vendor route', () => {
+    mockUseAuth.mockReturnValue({ isLoading: false, profile: null, user: null });
+
+    render(
+      <MemoryRouter initialEntries={['/become-vendor']}>
+        <Routes>
+          <Route
+            path="/become-vendor"
+            element={
+              <NonVendorRoute>
+                <div>Become Vendor Page</div>
+              </NonVendorRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Become Vendor Page')).toBeInTheDocument();
+  });
+
+  it('allows student users in non-vendor route', () => {
+    mockUseAuth.mockReturnValue({
+      isLoading: false,
+      profile: { role: 'student' },
+      user: { user_metadata: {} },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/become-vendor']}>
+        <Routes>
+          <Route
+            path="/become-vendor"
+            element={
+              <NonVendorRoute>
+                <div>Become Vendor Page</div>
+              </NonVendorRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Become Vendor Page')).toBeInTheDocument();
+  });
+
+  it('redirects vendor users away from non-vendor route', () => {
+    mockUseAuth.mockReturnValue({
+      isLoading: false,
+      profile: { role: 'vendor' },
+      user: { user_metadata: { role: 'vendor' } },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/become-vendor']}>
+        <Routes>
+          <Route
+            path="/become-vendor"
+            element={
+              <NonVendorRoute>
+                <div>Become Vendor Page</div>
+              </NonVendorRoute>
+            }
+          />
+          <Route path="/vendor-dashboard" element={<div>Vendor Dashboard</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Vendor Dashboard')).toBeInTheDocument();
+  });
+
+  it('redirects admin users away from non-vendor route', () => {
+    mockUseAuth.mockReturnValue({
+      isLoading: false,
+      profile: { role: 'admin' },
+      user: { user_metadata: { role: 'admin' } },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/become-vendor']}>
+        <Routes>
+          <Route
+            path="/become-vendor"
+            element={
+              <NonVendorRoute>
+                <div>Become Vendor Page</div>
+              </NonVendorRoute>
+            }
+          />
+          <Route path="/admin-dashboard" element={<div>Admin Dashboard</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
   });
 });

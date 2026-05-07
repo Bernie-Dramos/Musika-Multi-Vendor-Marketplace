@@ -33,7 +33,7 @@ export function AdminSettings() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-[#111111]">Settings</h1>
+        <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Settings</h1>
         <p className="text-[#6b7280]">Manage your admin profile and platform preferences.</p>
       </div>
 

@@ -79,6 +79,9 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
   const { totalItems, setIsCartOpen } = useCart();
   const { user, profile, isAuthenticated, signOut } = useAuth();
   const unreadMessageCount = useUnreadMessageCountQuery(user?.id, profile?.role).data ?? 0;
+  const visibleNavLinks = navLinks.filter(
+    (link) => link.page !== 'become-vendor' || !profile || (profile.role !== 'vendor' && profile.role !== 'admin'),
+  );
 
   // ── Scroll elevation ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -597,7 +600,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
                       {/* Nav links */}
                       <nav className="flex-1 overflow-y-auto px-4 py-2">
                         <ul className="space-y-0.5">
-                          {navLinks.map((link) => (
+                          {visibleNavLinks.map((link) => (
                             <li key={link.label}>
                               <button
                                 className={`block w-full rounded-full px-4 py-2.5 text-left text-sm transition-colors ${
@@ -674,7 +677,7 @@ export function Header({ navigateTo, currentPage }: HeaderProps) {
         <nav className="hidden bg-[#08090A] lg:block">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <ul className="flex h-11 items-center justify-between">
-              {navLinks.map((link) => (
+              {visibleNavLinks.map((link) => (
                 <li key={link.label}>
                   <button
                     onClick={() => navigateTo(link.page)}

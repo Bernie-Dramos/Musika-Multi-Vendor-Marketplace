@@ -20,7 +20,7 @@ function StatCard({ title, value, icon, growth }: StatCardProps) {
         )}
       </div>
       <p className="text-sm text-[#6b7280]">{title}</p>
-      <p className="text-4xl font-bold text-[#111111]">{value.toLocaleString()}</p>
+      <p className="text-3xl font-bold text-[#111111] sm:text-4xl">{value.toLocaleString()}</p>
     </div>
   );
 }
@@ -35,7 +35,7 @@ export function AdminOverview() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-[#111111]">Overview</h1>
+        <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Overview</h1>
         <p className="text-[#6b7280]">Platform-wide statistics and activity summary.</p>
       </div>
 

@@ -97,7 +97,7 @@ function NewListingModal({ userId, onClose }: NewListingModalProps) {
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[#374151]">Category *</label>
               <select
@@ -123,7 +123,7 @@ function NewListingModal({ userId, onClose }: NewListingModalProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[#374151]">City</label>
               <input
@@ -210,14 +210,14 @@ export function AdminVendors({ searchQuery }: AdminVendorsProps) {
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-[#111111]">Vendor Management</h1>
+            <h1 className="text-3xl font-bold text-[#111111] sm:text-4xl">Vendor Management</h1>
             <p className="text-[#6b7280]">Review, manage, and audit listings from global vendors.</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="border-[#111111]" onClick={handleExportCSV}>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Button variant="outline" className="w-full border-[#111111] sm:w-auto" onClick={handleExportCSV}>
               Export CSV
             </Button>
-            <Button className="bg-[#111111] text-white hover:bg-black" onClick={() => setShowModal(true)}>
+            <Button className="w-full bg-[#111111] text-white hover:bg-black sm:w-auto" onClick={() => setShowModal(true)}>
               + New Listing
             </Button>
           </div>
@@ -239,7 +239,7 @@ export function AdminVendors({ searchQuery }: AdminVendorsProps) {
                 )}
               </div>
               <p className="text-sm text-[#6b7280]">{card.title}</p>
-              <p className="text-4xl font-bold text-[#111111]">{isLoading ? '—' : card.value}</p>
+              <p className="text-3xl font-bold text-[#111111] sm:text-4xl">{isLoading ? '—' : card.value}</p>
             </div>
           ))}
         </section>
@@ -260,11 +260,13 @@ export function AdminVendors({ searchQuery }: AdminVendorsProps) {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3 text-[#6b7280]">
+            <div className="hidden items-center gap-3 text-[#6b7280] sm:flex">
               <Grid2x2 className="h-4 w-4" />
               <List className="h-4 w-4" />
             </div>
           </div>
+
+          <p className="px-4 pt-3 text-xs text-[#9ca3af] sm:hidden">Swipe horizontally to review full listing details.</p>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px]">

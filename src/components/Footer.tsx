@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { footerLinks } from '@/lib/data';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import type { NavigablePage } from '@/lib/navigation';
 
 interface FooterProps {
@@ -37,6 +38,11 @@ function resolvePage(href: string): NavigablePage | null {
 
 export function Footer({ navigateTo }: FooterProps) {
   const [email, setEmail] = useState('');
+  const { profile } = useAuth();
+  const isVendorOrAdmin = profile?.role === 'vendor' || profile?.role === 'admin';
+  const vendorLinks = isVendorOrAdmin
+    ? footerLinks.forVendors.filter((link) => link.href !== '/become-vendor')
+    : footerLinks.forVendors;
 
   const handleSubscribe = async () => {
     if (!email.trim()) {
@@ -147,7 +153,7 @@ export function Footer({ navigateTo }: FooterProps) {
           <div>
             <h4 className="mb-4 text-[15px] font-medium text-white">For Vendors</h4>
             <ul className="space-y-3">
-              {footerLinks.forVendors.map((link) => (
+              {vendorLinks.map((link) => (
                 <li key={link.label}>
                   <button
                     onClick={() => handleLinkClick(link.href)}

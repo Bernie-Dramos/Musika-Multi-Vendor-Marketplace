@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection, StaggerContainer, StaggerItem } from '@/components/AnimatedSection';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { features, howItWorks } from '@/lib/data';
 
 type Page = 'home' | 'services' | 'categories' | 'marketplace' | 'signin' | 'signup' | 'become-vendor';
@@ -59,6 +60,9 @@ const ctaDelayClasses = [
 ] as const;
 
 export function Home({ navigateTo }: HomeProps) {
+  const { profile } = useAuth();
+  const isVendorOrAdmin = profile?.role === 'vendor' || profile?.role === 'admin';
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -207,12 +211,14 @@ export function Home({ navigateTo }: HomeProps) {
                 >
                   Get Started
                 </button>
-                <button
-                  onClick={() => navigateTo('become-vendor')}
-                  className="bg-transparent text-white border border-white/20 px-8 py-3 rounded-full text-[14px] font-medium hover:bg-white/10 transition-all text-center"
-                >
-                  Become a Vendor
-                </button>
+                {!isVendorOrAdmin ? (
+                  <button
+                    onClick={() => navigateTo('become-vendor')}
+                    className="bg-transparent text-white border border-white/20 px-8 py-3 rounded-full text-[14px] font-medium hover:bg-white/10 transition-all text-center"
+                  >
+                    Become a Vendor
+                  </button>
+                ) : null}
               </div>
             </AnimatedSection>
 

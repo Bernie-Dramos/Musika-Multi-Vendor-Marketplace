@@ -112,3 +112,26 @@ export function VendorRoute({ children }: { children: ReactNode }) {
 
   return <>{children}</>;
 }
+
+export function NonVendorRoute({ children }: { children: ReactNode }) {
+  const { isLoading, profile, user } = useAuth();
+
+  if (isLoading) {
+    return <GuardLoading />;
+  }
+
+  const metadataRole = typeof user?.user_metadata?.role === 'string'
+    ? user.user_metadata.role
+    : undefined;
+  const role = profile?.role ?? metadataRole;
+
+  if (role === 'admin') {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+
+  if (role === 'vendor') {
+    return <Navigate to="/vendor-dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
